@@ -23,10 +23,9 @@ export class VulnerabilitiesProvider implements vscode.TreeDataProvider<TreeItem
 
             const workspacePath = getWorkspaceFolderPath();
             if (!workspacePath) {
-                vscode.window.showInformationMessage('No workspace folder is open.');
+                vscode.window.showInformationMessage('No fixes loaded from Corgea as no workspace is open. Open a workspace and try again.');
                 return [];
             }
-
 
             // Fetch vulnerabilities here
             const url = await getCorgeaUrl(this.context);

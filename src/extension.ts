@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { verifyAndStoreToken, getStoredApiKey, storeCorgeaUrl, getCorgeaUrl } from './tokenManager';
 import { VulnerabilitiesProvider } from './vulnerabilitiesProvider';
 import axios from 'axios'; // Ensure you install axios via npm
+import * as path from 'path';
 
 
 export function activate(context: vscode.ExtensionContext) {
@@ -47,6 +48,14 @@ export function activate(context: vscode.ExtensionContext) {
 			vulnerabilitiesProvider.refresh();
 		});
 
+        // Register command to open a file
+        let openFileCommand = vscode.commands.registerCommand('extension.openFile', (filePath) => {
+            const openPath = vscode.Uri.file(filePath);
+            vscode.workspace.openTextDocument(openPath).then(doc => {
+                vscode.window.showTextDocument(doc);
+            });
+        });
+
     });
 
     // Register command to show vulnerability details
@@ -56,7 +65,9 @@ export function activate(context: vscode.ExtensionContext) {
             `Vulnerability Details: ${vulnerability.cwe_name}`,
             vscode.ViewColumn.One,
             {
-                enableScripts: true
+                enableScripts: true,
+                retainContextWhenHidden: true,
+                enableCommandUris: true,
             }
 
         );
@@ -70,7 +81,7 @@ export function activate(context: vscode.ExtensionContext) {
 				params: { token: apiKey }
 			});
 			if (response.data && response.data.status === 'ok') {
-				panel.webview.html = getWebviewContent(panel.webview, response.data, context);
+				panel.webview.html = getWebviewContent(panel.webview, response.data, context, corgeaUrl);
 			} else {
 				panel.webview.html = `<html><body><h1>Error</h1><p>Could not load vulnerability details 123.</p></body></html>`;
 			}
@@ -86,10 +97,38 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 
-function getWebviewContent(webview: vscode.Webview, vulnerability, context: any) {
+function getWebviewContent(webview: vscode.Webview, vulnerability, context: any, corgeaUrl: string) {
 
     const myStyle = webview.asWebviewUri(vscode.Uri.joinPath(
         context.extensionUri, 'media', 'main.css')); 
+
+
+    const fullPath_working = vscode.workspace.workspaceFolders[0].uri.fsPath + "/" + vulnerability.issue.file_path
+
+    console.log('fullPath_working', fullPath_working)
+
+    const fullPath = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, vulnerability.issue.file_path));
+
+    console.log('fullPath', fullPath.path)
+
+
+    const fileUri = {
+        scheme: 'file',
+        path: fullPath.path,
+        authority: ''
+    };
+
+    const CorgeaUri = {
+        scheme: new URL(corgeaUrl).protocol.replace(':', ''),
+        path: '/issue/' + vulnerability.issue.id,
+        authority: corgeaUrl.replace(/^(https?:\/\/)/, '')
+    };
+
+    const filePath = encodeURIComponent(JSON.stringify(fileUri)); 
+
+    const goToCorgea = encodeURIComponent(JSON.stringify(CorgeaUri));
+
+    console.log('filePath', filePath)
     
     return /*html*/`
         <html>
@@ -105,7 +144,9 @@ function getWebviewContent(webview: vscode.Webview, vulnerability, context: any)
             <hr>
             <strong>${vulnerability.issue.urgency} - Classification:${vulnerability.issue.classification}</strong><br><br>
             <button class="primary" onclick="alert('Hello!')">Apply Diff</button>
-            <button class="primary" onclick="alert('Hello!')">Create Pull Request</button>
+            <a href="command:vscode.open?${filePath}"><button class="secondary">See File</button></a>
+            <a href="command:vscode.open?${goToCorgea}"><button class="secondary">See on Corgea</button></a>
+
             <br><br>
             <code>${vulnerability.fix.diff}</code>
             <div id="diffElement"></div>

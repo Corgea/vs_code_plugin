@@ -19,6 +19,7 @@ export function activate(context: vscode.ExtensionContext) {
             await storeCorgeaUrl(corgeaUrl, context);
         }
 
+
         // Then, ask for the API key
         const apiKey = await vscode.window.showInputBox({
             placeHolder: "Enter your Corgea API key",
@@ -54,7 +55,10 @@ export function activate(context: vscode.ExtensionContext) {
             'vulnerabilityDetails',
             `Vulnerability Details: ${vulnerability.cwe_name}`,
             vscode.ViewColumn.One,
-            {}
+            {
+                enableScripts: true
+            }
+
         );
 
 		try {
@@ -66,7 +70,7 @@ export function activate(context: vscode.ExtensionContext) {
 				params: { token: apiKey }
 			});
 			if (response.data && response.data.status === 'ok') {
-				panel.webview.html = getWebviewContent(response.data);
+				panel.webview.html = getWebviewContent(panel.webview, response.data, context);
 			} else {
 				panel.webview.html = `<html><body><h1>Error</h1><p>Could not load vulnerability details 123.</p></body></html>`;
 			}
@@ -82,22 +86,44 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 
-function getWebviewContent(vulnerability) {
+function getWebviewContent(webview: vscode.Webview, vulnerability, context: any) {
+
+    const myStyle = webview.asWebviewUri(vscode.Uri.joinPath(
+        context.extensionUri, 'media', 'main.css')); 
+    
     return /*html*/`
         <html>
         <head>		
+            <meta http-equiv="Content-Security-Policy" content="default-src self; img-src vscode-resource:; script-src vscode-resource: 'self' 'unsafe-inline'; style-src vscode-resource: 'self' 'unsafe-inline'; "/>
+
+            <link href="${myStyle}" rel="stylesheet" />
+            <script src="https://cdn.jsdelivr.net/npm/diff2html@3.4.48/bundles/js/diff2html-ui.min.js"></script>
+            <link href="https://cdn.jsdelivr.net/npm/diff2html@3.4.48/bundles/css/diff2html.min.css" rel="stylesheet">
         </head>
         <body>
             <h1>${vulnerability.issue.file_path}: ${vulnerability.issue.line_num}</h1>
-			<strong>Classification:${vulnerability.issue.classification}</strong>
-			<strong>File:</strong> ${vulnerability.issue.file_path}<br>
-            <strong>Severity:</strong> ${vulnerability.issue.urgency}<br>
-            <strong>Description:</strong> ${vulnerability.issue.description}<br>
-			<button onclick="alert('Hello!')">Click me</button>
-			<vscode-button id="howdy">Apply Diff</vscode-button>
-			<vscode-button id="howdy">Issue PR</vscode-button>
-            <strong>Fix:</strong> ${vulnerability.fix.description}<br>
-			<code>${vulnerability.fix.diff}</code>
+            <hr>
+            <strong>${vulnerability.issue.urgency} - Classification:${vulnerability.issue.classification}</strong><br><br>
+            <button class="primary" onclick="alert('Hello!')">Apply Diff</button>
+            <button class="primary" onclick="alert('Hello!')">Create Pull Request</button>
+            <br><br>
+            <code>${vulnerability.fix.diff}</code>
+            <div id="diffElement"></div>
+
+            <br><br>
+            <strong>Fix:</strong> ${vulnerability.fix.explanation}<br><br>
+            <br><br>
+
+            <script src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html.min.js"></script>
+            <script>
+                const targetElement = document.getElementById('diffElement');
+                const diffHtml = Diff2Html.html('${vulnerability.fix.diff}', {
+                    inputFormat: 'diff', outputFormat: 'side-by-side', showFiles: true, matching: 'lines'
+                });
+                targetElement.innerHTML = diffHtml;
+            </script>
+
+
         </body>
         </html>
     `;

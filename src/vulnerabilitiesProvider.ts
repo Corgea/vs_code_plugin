@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import { getCorgeaUrl, getStoredApiKey } from './tokenManager';
 import axios from 'axios';
+import { getWorkspaceFolderPath } from './utils';
+
 
 export class VulnerabilitiesProvider implements vscode.TreeDataProvider<TreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<TreeItem | undefined> = new vscode.EventEmitter<TreeItem | undefined>();
@@ -18,10 +20,23 @@ export class VulnerabilitiesProvider implements vscode.TreeDataProvider<TreeItem
 
     async getChildren(element?: TreeItem): Promise<TreeItem[]> {
         if (!element) {
+
+            const workspacePath = getWorkspaceFolderPath();
+            if (!workspacePath) {
+                vscode.window.showInformationMessage('No workspace folder is open.');
+                return [];
+            }
+
+
             // Fetch vulnerabilities here
             const url = await getCorgeaUrl(this.context);
             const apiKey = await getStoredApiKey(this.context);
-            const response = await axios.get(`${url}/api/cli/issues`, { params: { token: apiKey } });
+            const response = await axios.get(`${url}/api/cli/issues`, { 
+                params: { 
+                    token: apiKey, 
+                    project: workspacePath
+                } 
+            });
             const files = new Map<string, VulnerabilityItem[]>();
 
             response.data.issues.forEach(v => {

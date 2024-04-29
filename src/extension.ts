@@ -3,10 +3,9 @@ import { verifyAndStoreToken, getStoredApiKey, storeCorgeaUrl, getCorgeaUrl } fr
 import { VulnerabilitiesProvider } from './vulnerabilitiesProvider';
 import axios from 'axios'; // Ensure you install axios via npm
 import * as path from 'path';
-
+import * as diff2html from 'diff2html'
 
 export function activate(context: vscode.ExtensionContext) {
-	console.log('Congratulations, your extension "corgea" is now active!');
     let disposable = vscode.commands.registerCommand('corgea.setApiKey', async () => {
         // First, ask for the Corgea URL
         const corgeaUrl = await vscode.window.showInputBox({
@@ -102,21 +101,9 @@ function getWebviewContent(webview: vscode.Webview, vulnerability, context: any,
     const myStyle = webview.asWebviewUri(vscode.Uri.joinPath(
         context.extensionUri, 'media', 'main.css')); 
 
-
-    const fullPath_working = vscode.workspace.workspaceFolders[0].uri.fsPath + "/" + vulnerability.issue.file_path
-
-    console.log('fullPath_working', fullPath_working)
-
     const fullPath = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, vulnerability.issue.file_path));
 
-    console.log('fullPath', fullPath.path)
-
-
-    const fileUri = {
-        scheme: 'file',
-        path: fullPath.path,
-        authority: ''
-    };
+    const fileUri = vscode.Uri.parse(fullPath.with({ fragment: `L${vulnerability.issue.line_num}` }).toString());
 
     const CorgeaUri = {
         scheme: new URL(corgeaUrl).protocol.replace(':', ''),
@@ -128,42 +115,51 @@ function getWebviewContent(webview: vscode.Webview, vulnerability, context: any,
 
     const goToCorgea = encodeURIComponent(JSON.stringify(CorgeaUri));
 
-    console.log('filePath', filePath)
+    const diffString = `${vulnerability.fix.diff}`;
+
     
     return /*html*/`
         <html>
-        <head>		
-            <meta http-equiv="Content-Security-Policy" content="default-src self; img-src vscode-resource:; script-src vscode-resource: 'self' 'unsafe-inline'; style-src vscode-resource: 'self' 'unsafe-inline'; "/>
-
+        <head>  
+            <meta http-equiv="Content-Security-Policy" content="
+                default-src 'none';
+                style-src 'unsafe-inline' https://cdn.jsdelivr.net ${webview.cspSource} https://cdnjs.cloudflare.com;
+                script-src 'unsafe-inline' https://cdn.jsdelivr.net ${webview.cspSource};
+            ">
             <link href="${myStyle}" rel="stylesheet" />
-            <script src="https://cdn.jsdelivr.net/npm/diff2html@3.4.48/bundles/js/diff2html-ui.min.js"></script>
-            <link href="https://cdn.jsdelivr.net/npm/diff2html@3.4.48/bundles/css/diff2html.min.css" rel="stylesheet">
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css" media="screen and (prefers-color-scheme: dark)" />
+            <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/diff2html/bundles/css/diff2html.min.css">
+            <script src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html-ui.min.js"></script>
         </head>
         <body>
             <h1>${vulnerability.issue.file_path}: ${vulnerability.issue.line_num}</h1>
             <hr>
-            <strong>${vulnerability.issue.urgency} - Classification:${vulnerability.issue.classification}</strong><br><br>
-            <button class="primary" onclick="alert('Hello!')">Apply Diff</button>
+            <strong><span class="${vulnerability.issue.urgency} severity">${vulnerability.issue.urgency}</span> - Classification:${vulnerability.issue.classification}</strong><br><br>
+            <button class="primary" onclick="alert('Hello!')">Apply Fix</button>
             <a href="command:vscode.open?${filePath}"><button class="secondary">See File</button></a>
             <a href="command:vscode.open?${goToCorgea}"><button class="secondary">See on Corgea</button></a>
 
             <br><br>
-            <code>${vulnerability.fix.diff}</code>
             <div id="diffElement"></div>
 
             <br><br>
             <strong>Fix:</strong> ${vulnerability.fix.explanation}<br><br>
             <br><br>
-
-            <script src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html.min.js"></script>
+            
             <script>
-                const targetElement = document.getElementById('diffElement');
-                const diffHtml = Diff2Html.html('${vulnerability.fix.diff}', {
-                    inputFormat: 'diff', outputFormat: 'side-by-side', showFiles: true, matching: 'lines'
-                });
-                targetElement.innerHTML = diffHtml;
-            </script>
 
+            const diffString = ${JSON.stringify(diffString)};
+
+            console.log(diffString);
+
+            document.addEventListener('DOMContentLoaded', function () {
+              var targetElement = document.getElementById('diffElement');
+              const configuration = { drawFileList: true, matching: 'lines', highlight: true, outputFormat: 'side-by-side', colorScheme: 'auto'};
+              var diff2htmlUi = new Diff2HtmlUI(targetElement, diffString, configuration);
+              diff2htmlUi.draw();
+              diff2htmlUi.highlightCode();
+            });
+          </script>
 
         </body>
         </html>

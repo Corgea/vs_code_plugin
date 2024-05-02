@@ -225,13 +225,7 @@ function getWebviewContent(
 
   const goToCorgea = encodeURIComponent(JSON.stringify(CorgeaUri));
 
-
-  const fix = vulnerability.fix;
-  console.log(fix);
-
   const diffString = vulnerability.fix.diff;
-
-  console.log(diffString);
 
   return /*html*/ `
         <html>
@@ -251,12 +245,9 @@ function getWebviewContent(
             <script src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html-ui.min.js"></script>
         </head>
         <body>
-            <h1>${vulnerability.issue.file_path}: ${
-    vulnerability.issue.line_num
-  }</h1>
-            <strong><span class="${vulnerability.issue.urgency} severity">${
-    vulnerability.issue.urgency
-  }</span> - Classification:${vulnerability.issue.classification}</strong>
+            <h1>${vulnerability.issue.file_path}: ${vulnerability.issue.line_num}</h1>
+            <strong><span class="${vulnerability.issue.urgency} severity">${vulnerability.issue.urgency}</span> - ${vulnerability.issue.classification}</strong>
+
   <hr>
   <a href="command:vscode.open?${filePath}"><button class="secondary">See File</button></a>
   <a href="command:vscode.open?${goToCorgea}"><button class="secondary">See on Corgea</button></a>
@@ -275,8 +266,6 @@ function getWebviewContent(
         }
         `
       : /*html*/ `
-
-        
         ${
           vulnerability.fix.diff
             ? /*html*/ `
@@ -286,34 +275,39 @@ function getWebviewContent(
         <div id="diffElement"></div>
 
         <br><br>
+        <h3>Fix Explanation</h3>
         <p class="fix_explanation">${vulnerability.fix.explanation}</p>
-        
-        <script>
-
-        const diffString = ${JSON.stringify(diffString)};
-
-        document.addEventListener('DOMContentLoaded', function () {
-          var targetElement = document.getElementById('diffElement');
-          const configuration = { drawFileList: true, matching: 'lines', highlight: true, outputFormat: 'side-by-side', colorScheme: 'auto'};
-          var diff2htmlUi = new Diff2HtmlUI(targetElement, diffString, configuration);
-          diff2htmlUi.draw();
-          diff2htmlUi.highlightCode();
-        });
-        </script>
-        
         `
-            : `
-        
-        <h3>Fix is in progress</h3>        
-        
-        `
-        }
-
-
-
+            : `<h3>Fix is in progress</h3>`
+      }
       `
   }
 
+          <script>
+
+            const diffString = ${JSON.stringify(diffString)};
+
+            document.addEventListener('DOMContentLoaded', function () {
+              var targetElement = document.getElementById('diffElement');
+              const configuration = { drawFileList: true, matching: 'lines', highlight: true, outputFormat: 'side-by-side', colorScheme: 'auto'};
+              var diff2htmlUi = new Diff2HtmlUI(targetElement, diffString, configuration);
+              diff2htmlUi.draw();
+              diff2htmlUi.highlightCode();
+            });
+
+            const vscode = acquireVsCodeApi();
+
+            function applyDiff() {
+                const diff =  diffString;
+                const fileUri = "${filePathString}";
+                console.log(fileUri);
+                vscode.postMessage({
+                    command: 'applyDiff',
+                    fileUri: fileUri,
+                    diff: diff
+                });
+            }
+          </script>
         </body>
         </html>
     `;

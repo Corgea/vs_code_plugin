@@ -15,7 +15,13 @@
     "commands": [
       {
         "command": "corgea.setApiKey",
-        "title": "Corgea: Authenticate API Key"
+        "title": "Login",
+        "category": "Corgea"
+      },
+      {
+        "command": "corgea.logout",
+        "title": "Logout",
+        "category": "Corgea"
       }
     ],
     "viewsContainers": {
@@ -29,6 +35,7 @@
     },
     "views": {
       "corgeaPanel": [
+
         {
           "id": "vulnerabilitiesView",
           "name": "Vulnerabilities"

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { getCorgeaUrl, getStoredApiKey } from './tokenManager';
+import { getCorgeaUrl, getStoredApiKey, isAuthenticated } from './tokenManager';
 import axios from 'axios';
 import { getWorkspaceFolderPath } from './utils';
 
@@ -21,21 +21,50 @@ export class VulnerabilitiesProvider implements vscode.TreeDataProvider<TreeItem
     async getChildren(element?: TreeItem): Promise<TreeItem[]> {
         if (!element) {
 
+            const authenticated = await isAuthenticated(this.context); // Check if the user is authenticated
+            if (!authenticated) {
+                // Return a TreeItem that prompts the user to authenticate
+                return [new TreeItem("Not logged in - Run 'Corgea: Login' from the command pallete", vscode.TreeItemCollapsibleState.None, {
+                    command: 'corgea.setApiKey',
+                    title: "Authenticate",
+                    tooltip: "Click to authenticate with Corgea"
+                })];
+            }
+
+
             const workspacePath = getWorkspaceFolderPath();
             if (!workspacePath) {
                 vscode.window.showInformationMessage('No fixes loaded from Corgea as no workspace is open. Open a workspace and try again.');
                 return [];
             }
 
+        
             // Fetch vulnerabilities here
             const url = await getCorgeaUrl(this.context);
             const apiKey = await getStoredApiKey(this.context);
+            
             const response = await axios.get(`${url}/api/cli/issues`, { 
                 params: { 
                     token: apiKey, 
                     project: workspacePath
                 } 
-            });
+            }).catch(error => {
+                console.error(error);
+                vscode.window.showErrorMessage('Corgea: Failed to fetch issues. Please try again.');
+                return [];
+            }
+
+            if (response.status >= 400) { 
+                vscode.window.showInformationMessage('Corgea: No issues found. Please check your API key and try again.');
+                return [];
+            }
+
+            if (response.data.issues === null) {  
+                vscode.window.showInformationMessage('Corgea: No issues found for this project.');
+                return [];
+            }
+
+
             const files = new Map<string, VulnerabilityItem[]>();
 
             response.data.issues.forEach(v => {
@@ -43,11 +72,24 @@ export class VulnerabilitiesProvider implements vscode.TreeDataProvider<TreeItem
                 if (!files.has(filePath)) {
                     files.set(filePath, []);
                 }
-                files.get(filePath).push(new VulnerabilityItem(`${v.urgency} - ${v.classification}: ${v.line_num}`, vscode.TreeItemCollapsibleState.None, {
+                const classification = v.classification.match(/(?:\('([^']+)'\))|$/);
+                // Use the matched group if available, otherwise fall back to the original classification string
+                const vulnerabilityLabel = classification && classification[1] ? classification[1] : v.classification.replace(/^CWE-\d+: /, '');
+                files.get(filePath).push(new VulnerabilityItem(`${v.urgency} - ${vulnerabilityLabel}: ${v.line_num}`, vscode.TreeItemCollapsibleState.None, {
                     command: 'vulnerabilities.showDetails',
                     title: "Show Vulnerability Details",
                     arguments: [v]
                 }));
+            });
+
+            // Sort vulnerabilities by line number ascending
+            Array.from(files.keys()).forEach(filePath => {
+                const vulnerabilities = files.get(filePath);
+                vulnerabilities.sort((a, b) => {
+                    const lineNumA = parseInt(a.label.split(':')[1].trim());
+                    const lineNumB = parseInt(b.label.split(':')[1].trim());
+                    return lineNumA - lineNumB;
+                });
             });
 
             return Array.from(files.keys()).map(filePath => 
@@ -59,6 +101,13 @@ export class VulnerabilitiesProvider implements vscode.TreeDataProvider<TreeItem
             return [];
         }
     }
+
+
+    clearData(): void {
+        this._onDidChangeTreeData.fire(undefined);
+      }
+    
+    
 }
 
 class TreeItem extends vscode.TreeItem {

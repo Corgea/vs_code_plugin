@@ -72,3 +72,7 @@ button {
     background: #fff700;
     color: #333;
 }
+
+.fix_explanation {
+    font-size: medium;
+}

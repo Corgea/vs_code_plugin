@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import {
+  isAuthenticated,
   verifyAndStoreToken,
   getStoredApiKey,
   storeCorgeaUrl,
@@ -8,10 +9,34 @@ import {
 import { VulnerabilitiesProvider } from "./vulnerabilitiesProvider";
 import axios from "axios"; // Ensure you install axios via npm
 import * as path from "path";
-import * as diff2html from "diff2html";
+import * as diff2html from "`diff2html";
 import { applyPatch } from "diff";
 
 export function activate(context: vscode.ExtensionContext) {
+  // Register the vulnerabilities view
+  const vulnerabilitiesProvider = new VulnerabilitiesProvider(context);
+
+  vscode.window.registerTreeDataProvider(
+    "vulnerabilitiesView",
+    vulnerabilitiesProvider
+  );
+
+  // Register the refresh command
+  vscode.commands.registerCommand("vulnerabilities.refreshEntry", () =>
+    vulnerabilitiesProvider.refresh()
+  );
+
+  // Refresh the view when a document is saved
+  vscode.workspace.onDidSaveTextDocument((document) => {
+    vulnerabilitiesProvider.refresh();
+  });
+
+  // Refresh the view when a document is opened
+  vscode.workspace.onDidOpenTextDocument((document) => {
+    vulnerabilitiesProvider.refresh();
+  });
+
+  // Register the applyDiff command to apply the fix
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "corgea.applyDiff",
@@ -31,12 +56,32 @@ export function activate(context: vscode.ExtensionContext) {
         });
 
         vscode.window.showInformationMessage(
-            "Fix applied successfully. Save the file to reflect the changes."
-          );
+          "Fix applied successfully. Save the file to reflect the changes."
+        );
       }
     )
   );
 
+  // Register the logout command
+  context.subscriptions.push(
+    vscode.commands.registerCommand("corgea.logout", async () => {
+      // Remove the API key and URL
+      await context.globalState.update("corgeaApiKey", undefined);
+      await context.globalState.update("corgeaUrl", undefined);
+
+      // Update the login status
+      await context.globalState.update("isLoggedIn", false);
+
+      // Clear the vulnerabilities
+      vulnerabilitiesProvider.clearData();
+
+      vscode.window.showInformationMessage(
+        "You have been logged out successfully."
+      );
+    })
+  );
+
+  // Register the setApiKey command
   let disposable = vscode.commands.registerCommand(
     "corgea.setApiKey",
     async () => {
@@ -55,36 +100,27 @@ export function activate(context: vscode.ExtensionContext) {
       // Then, ask for the API key
       const apiKey = await vscode.window.showInputBox({
         placeHolder: "Enter your Corgea API key",
-        prompt: "API Key is needed to authenticate with Corgea",
+        prompt: "API Key is found on the integrations page in Corgea.",
         ignoreFocusOut: true,
       });
 
+      // Verify the API key
       if (apiKey) {
-        const isValid = await verifyAndStoreToken(apiKey, corgeaUrl, context);
-        if (isValid) {
-          vscode.window.showInformationMessage(
-            "API Key verified successfully. View the Corgea extension to start fixing."
+        try {
+          const isValid = await verifyAndStoreToken(apiKey, corgeaUrl, context);
+          if (isValid) {
+            vulnerabilitiesProvider.refresh();
+            vscode.window.showInformationMessage(
+              "API Key verified successfully. View the Corgea extension to start fixing."
+            );
+          }
+        } catch (error) {
+          console.error(error);
+          vscode.window.showErrorMessage(
+            "Error occurred while verifying the API key. Please try again."
           );
         }
       }
-
-      // Register the vulnerabilities view
-      const vulnerabilitiesProvider = new VulnerabilitiesProvider(context);
-      vscode.window.registerTreeDataProvider(
-        "vulnerabilitiesView",
-        vulnerabilitiesProvider
-      );
-      vscode.commands.registerCommand("vulnerabilities.refreshEntry", () =>
-        vulnerabilitiesProvider.refresh()
-      );
-
-      // Refresh the view when a document is opened or saved
-      vscode.workspace.onDidSaveTextDocument((document) => {
-        vulnerabilitiesProvider.refresh();
-      });
-      vscode.workspace.onDidOpenTextDocument((document) => {
-        vulnerabilitiesProvider.refresh();
-      });
     }
   );
 
@@ -136,11 +172,19 @@ export function activate(context: vscode.ExtensionContext) {
             corgeaUrl
           );
         } else {
-          panel.webview.html = `<html><body><h1>Error</h1><p>Could not load vulnerability details 123.</p></body></html>`;
+          panel.webview.html = `<html><body><h1>Error</h1><p>Could not load vulnerability details.</p></body></html>`;
         }
       } catch (error) {
         console.error(error);
-        panel.webview.html = `<html><body><h1>Error</h1><p>Could not load vulnerability details 456.</p></body></html>`;
+        if (
+          error.response &&
+          error.response.status >= 400 &&
+          error.response.status < 500
+        ) {
+          panel.webview.html = `<html><body><h1>Error</h1><p>Client error occurred while loading vulnerability details.</p></body></html>`;
+        } else {
+          panel.webview.html = `<html><body><h1>Error</h1><p>Could not load vulnerability details.</p></body></html>`;
+        }
       }
     }
   );
@@ -181,7 +225,13 @@ function getWebviewContent(
 
   const goToCorgea = encodeURIComponent(JSON.stringify(CorgeaUri));
 
-  const diffString = `${vulnerability.fix.diff}`;
+
+  const fix = vulnerability.fix;
+  console.log(fix);
+
+  const diffString = vulnerability.fix.diff;
+
+  console.log(diffString);
 
   return /*html*/ `
         <html>
@@ -204,48 +254,65 @@ function getWebviewContent(
             <h1>${vulnerability.issue.file_path}: ${
     vulnerability.issue.line_num
   }</h1>
-            <hr>
             <strong><span class="${vulnerability.issue.urgency} severity">${
     vulnerability.issue.urgency
-  }</span> - Classification:${
-    vulnerability.issue.classification
-  }</strong><br><br>
-            <button class="primary" onclick="applyDiff()">Apply Fix</button>
-            <a href="command:vscode.open?${filePath}"><button class="secondary">See File</button></a>
-            <a href="command:vscode.open?${goToCorgea}"><button class="secondary">See on Corgea</button></a>
+  }</span> - Classification:${vulnerability.issue.classification}</strong>
+  <hr>
+  <a href="command:vscode.open?${filePath}"><button class="secondary">See File</button></a>
+  <a href="command:vscode.open?${goToCorgea}"><button class="secondary">See on Corgea</button></a>
+  ${
+    vulnerability.issue.on_hold
+      ? /*html*/ `
+        <h3 class="on_hold">A fix was not issued</h3>
+        ${
+          vulnerability.issue.hold_reason === "language"
+            ? /*html*/ `<p class="hold_reason">Reason 1 message.</p>`
+            : vulnerability.issue.hold_reason === "plan"
+            ? /*html*/ `<p class="hold_reason">Reason 2 message.</p>`
+            : /*html*/ `<p class="hold_reason">Corgea was unable to generate a fix for this issue. This was because the fix suggested failed our QA checks. This was likely due to the AI not generating a best practice fix or it did not have enough context to generate a fix.
 
-            <br><br>
-            <div id="diffElement"></div>
+            </p>`
+        }
+        `
+      : /*html*/ `
 
-            <br><br>
-            <strong>Fix:</strong> ${vulnerability.fix.explanation}<br><br>
-            <br><br>
-            
-            <script>
+        
+        ${
+          vulnerability.fix.diff
+            ? /*html*/ `
+        <button class="primary" onclick="applyDiff()">Apply Fix</button>
+        <br><br>
 
-            const diffString = ${JSON.stringify(diffString)};
+        <div id="diffElement"></div>
 
-            document.addEventListener('DOMContentLoaded', function () {
-              var targetElement = document.getElementById('diffElement');
-              const configuration = { drawFileList: true, matching: 'lines', highlight: true, outputFormat: 'side-by-side', colorScheme: 'auto'};
-              var diff2htmlUi = new Diff2HtmlUI(targetElement, diffString, configuration);
-              diff2htmlUi.draw();
-              diff2htmlUi.highlightCode();
-            });
+        <br><br>
+        <p class="fix_explanation">${vulnerability.fix.explanation}</p>
+        
+        <script>
 
-            const vscode = acquireVsCodeApi();
+        const diffString = ${JSON.stringify(diffString)};
 
-            function applyDiff() {
-                const diff =  diffString;
-                const fileUri = "${filePathString}";
-                console.log(fileUri);
-                vscode.postMessage({
-                    command: 'applyDiff',
-                    fileUri: fileUri,
-                    diff: diff
-                });
-            }
+        document.addEventListener('DOMContentLoaded', function () {
+          var targetElement = document.getElementById('diffElement');
+          const configuration = { drawFileList: true, matching: 'lines', highlight: true, outputFormat: 'side-by-side', colorScheme: 'auto'};
+          var diff2htmlUi = new Diff2HtmlUI(targetElement, diffString, configuration);
+          diff2htmlUi.draw();
+          diff2htmlUi.highlightCode();
+        });
         </script>
+        
+        `
+            : `
+        
+        <h3>Fix is in progress</h3>        
+        
+        `
+        }
+
+
+
+      `
+  }
 
         </body>
         </html>

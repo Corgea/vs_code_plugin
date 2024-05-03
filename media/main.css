@@ -6,7 +6,7 @@
 
 body {
     margin: 0 auto;
-    padding: 2%;
+    padding: 3%;
 }
 
 .main div {
@@ -24,39 +24,45 @@ button {
     cursor: pointer;
 }
 
-.primary {
+.btn-primary {
     background-color: #2d6198;
     color: #fff;
 }
 
-.secondary {
-    background-color: #f0f0f0;
-    color: #333;
+.btn-secondary {
+    background-color: #3A3D41;
+    color: #F8F8F8;
 }
 
+
 .card {
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    padding: 10px;
-    margin: 10px;
+    border: 1px solid #373737;
+    border-radius: 3px;
+    margin: 10px 0;
 }
 
 .card-header {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: bold;
+    color: #D4D4D4;
+    border-bottom: 1px solid #373737;
+    padding: 10px; /* Add padding to the card-header */
+    background-color: #373737;
 }
 
 .card-body {
     font-size: 16px;
+    padding: 10px; 
 }
 
 .card-footer {
     font-size: 14px;
-    color: #666;
+    padding: 10px; /* Move padding from card to card-footer */
 }
 
 .severity{
-    padding: 3px;
+    padding: 3px 10px;
+    border-radius: 5px;
 }
 
 .HI {
@@ -76,4 +82,10 @@ button {
 
 .fix_explanation {
     font-size: medium;
+}
+hr {
+    border: 0;
+    height: 1px;
+    background: #373737;
+    margin: 10px 0;
 }

@@ -261,40 +261,48 @@ function getWebviewContent(
         <body>        
             
             <h1><img src="${logoSrc}" alt="Logo" width="50"><a href="command:vscode.open?${filePath}">${vulnerability.issue.file_path}: ${vulnerability.issue.line_num}</a></h1>
-            <strong><span class="${vulnerability.issue.urgency} severity">${vulnerability.issue.urgency}</span> - ${vulnerability.issue.classification}</strong>
-                <br>
+            <strong><span class="${vulnerability.issue.urgency} severity">${vulnerability.issue.urgency}</span></strong> ${vulnerability.issue.classification}
   <hr>
-  <br>
-  <a href="command:vscode.open?${goToCorgea}"><button class="secondary">See on Corgea</button></a>
+  <a href="command:vscode.open?${goToCorgea}"><button class="btn-secondary">See on Corgea</button></a>
   ${
     vulnerability.issue.on_hold
       ? /*html*/ `
-      <center>
-        <h3 class="on_hold">A fix was not issued</h3>
+        <div class="card">
+          <div class="card-header">Could Not Issue Fix</div>
         ${
           vulnerability.issue.hold_reason === "language"
-            ? /*html*/ `<p class="hold_reason">Reason 1 message.</p>`
+            ? /*html*/ `<div class="card-body"><p class="fix_explanation">Corgea currently doesn't support this language.</p></div>`
             : vulnerability.issue.hold_reason === "plan"
-            ? /*html*/ `<p class="hold_reason">Reason 2 message.</p>`
-            : /*html*/ `<p class="hold_reason">Corgea was unable to generate a fix for this issue. This was because the fix suggested failed our QA checks. This was likely due to the AI not generating a best practice fix or it did not have enough context to generate a fix.
-
-            </p></center>`
-        }
+            ? /*html*/ `<div class="card-body"><p class="fix_explanation">You've reached the limit of your plan. Please upgrade to get all the fixes.</p></div>`
+            : /*html*/ `<div class="card-body"><p class="fix_explanation">Corgea was unable to generate a fix for this issue. This was because the fix suggested failed our QA checks. This was likely due to the AI not generating a best practice fix or it did not have enough context to generate a fix.</p></div>
+            `
+        }</div>
         `
       : /*html*/ `
         ${
           vulnerability.fix.diff
             ? /*html*/ `
-        <button class="primary" onclick="applyDiff()">Apply Fix</button>
+        <button class="btn-primary" onclick="applyDiff()">Apply Fix</button>
         <br><br>
 
         <div id="diffElement"></div>
 
         <br><br>
-        <h3>Fix Explanation</h3>
-        <p class="fix_explanation">${vulnerability.fix.explanation}</p>
+        <div class="card">
+          <div class="card-header">Fix Explanation</div>
+          <div class="card-body"><p class="fix_explanation">${vulnerability.fix.explanation}</p></div>
+        </div>
+
         `
-            : `<h3>Fix is in progress</h3>`
+            : `
+            <div class="card">
+              <div class="card-header">Fix In Progress</div>
+              <div class="card-body"><p class="fix_explanation">Corgea is processing the issue and will create a fix soon. Please check again later.</p></div>
+            </div>
+  
+            
+            
+            `
       }
       `
   }

@@ -24,11 +24,7 @@ export class VulnerabilitiesProvider implements vscode.TreeDataProvider<TreeItem
             const authenticated = await isAuthenticated(this.context); // Check if the user is authenticated
             if (!authenticated) {
                 // Return a TreeItem that prompts the user to authenticate
-                return [new TreeItem("Not logged in - Run 'Corgea: Login' from the command pallete", vscode.TreeItemCollapsibleState.None, {
-                    command: 'corgea.setApiKey',
-                    title: "Authenticate",
-                    tooltip: "Click to authenticate with Corgea"
-                })];
+                return [new TreeItem("Not logged in - Run '>Corgea: Login' from the command pallete", vscode.TreeItemCollapsibleState.None)];
             }
 
 

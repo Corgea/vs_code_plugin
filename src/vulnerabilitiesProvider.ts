@@ -66,16 +66,24 @@ export class VulnerabilitiesProvider implements vscode.TreeDataProvider<TreeItem
 
 
             const files = new Map<string, VulnerabilityItem[]>();
-
             response.data.issues.forEach(v => {
                 const filePath = v.file_path;
                 if (!files.has(filePath)) {
                     files.set(filePath, []);
                 }
+
+                let label;
+                if (v.hold_fix === true) {
+                    label = '- On Hold';
+                } else {
+                    label = '';
+                }
+
                 const classification = v.classification.match(/(?:\('([^']+)'\))|$/);
                 // Use the matched group if available, otherwise fall back to the original classification string
                 const vulnerabilityLabel = classification && classification[1] ? classification[1] : v.classification.replace(/^CWE-\d+: /, '');
-                files.get(filePath).push(new VulnerabilityItem(`${v.urgency} - ${vulnerabilityLabel}: ${v.line_num}`, vscode.TreeItemCollapsibleState.None, {
+                const vulnerabilityItemLabel = `${v.urgency} - ${vulnerabilityLabel}: ${v.line_num} ${label}`;
+                files.get(filePath).push(new VulnerabilityItem(vulnerabilityItemLabel, vscode.TreeItemCollapsibleState.None, {
                     command: 'vulnerabilities.showDetails',
                     title: "Show Vulnerability Details",
                     arguments: [v]
@@ -83,7 +91,7 @@ export class VulnerabilitiesProvider implements vscode.TreeDataProvider<TreeItem
             });
 
             // Sort vulnerabilities by line number ascending
-            Array.from(files.keys()).forEach(filePath => {
+            Array.from(files.keys()).sort().forEach(filePath => {
                 const vulnerabilities = files.get(filePath);
                 vulnerabilities.sort((a, b) => {
                     const lineNumA = parseInt(a.label.split(':')[1].trim());

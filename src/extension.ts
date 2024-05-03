@@ -42,17 +42,19 @@ export function activate(context: vscode.ExtensionContext) {
       "corgea.applyDiff",
       async (fileUri: vscode.Uri, diff: string) => {
         const document = await vscode.workspace.openTextDocument(fileUri);
-        const editor = await vscode.window.showTextDocument(document);
 
         const currentContent = document.getText();
         const newContent = applyPatch(currentContent, diff);
+
         
         if (newContent === false) {
           vscode.window.showErrorMessage(
             "The diff couldn't be applied. This is likely due to your code being modified since the fix was generated. Please refresh the vulnerabilities and try again."
           );
           return;
-        }
+        } 
+
+        const editor = await vscode.window.showTextDocument(document);
 
         await editor.edit((editBuilder) => {
           const entireRange = new vscode.Range(
@@ -235,11 +237,15 @@ function getWebviewContent(
 
   const diffString = vulnerability.fix.diff;
 
+  const logoPath = vscode.Uri.joinPath(context.extensionUri, 'images', 'logo.png');
+  const logoSrc = webview.asWebviewUri(logoPath);
+
   return /*html*/ `
         <html>
         <head>  
             <meta http-equiv="Content-Security-Policy" content="
                 default-src 'none';
+                img-src ${webview.cspSource} https:;
                 style-src 'unsafe-inline' https://cdn.jsdelivr.net ${
                   webview.cspSource
                 } https://cdnjs.cloudflare.com;
@@ -252,8 +258,9 @@ function getWebviewContent(
             <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/diff2html/bundles/css/diff2html.min.css">
             <script src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html-ui.min.js"></script>
         </head>
-        <body>
-            <h1><a href="command:vscode.open?${filePath}">${vulnerability.issue.file_path}: ${vulnerability.issue.line_num}</a></h1>
+        <body>        
+            
+            <h1><img src="${logoSrc}" alt="Logo" width="50"><a href="command:vscode.open?${filePath}">${vulnerability.issue.file_path}: ${vulnerability.issue.line_num}</a></h1>
             <strong><span class="${vulnerability.issue.urgency} severity">${vulnerability.issue.urgency}</span> - ${vulnerability.issue.classification}</strong>
                 <br>
   <hr>
@@ -262,6 +269,7 @@ function getWebviewContent(
   ${
     vulnerability.issue.on_hold
       ? /*html*/ `
+      <center>
         <h3 class="on_hold">A fix was not issued</h3>
         ${
           vulnerability.issue.hold_reason === "language"
@@ -270,7 +278,7 @@ function getWebviewContent(
             ? /*html*/ `<p class="hold_reason">Reason 2 message.</p>`
             : /*html*/ `<p class="hold_reason">Corgea was unable to generate a fix for this issue. This was because the fix suggested failed our QA checks. This was likely due to the AI not generating a best practice fix or it did not have enough context to generate a fix.
 
-            </p>`
+            </p></center>`
         }
         `
       : /*html*/ `

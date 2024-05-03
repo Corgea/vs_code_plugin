@@ -52,7 +52,7 @@ export class VulnerabilitiesProvider implements vscode.TreeDataProvider<TreeItem
                 console.error(error);
                 vscode.window.showErrorMessage('Corgea: Failed to fetch issues. Please try again.');
                 return [];
-            }
+            });
 
             if (response.status >= 400) { 
                 vscode.window.showInformationMessage('Corgea: No issues found. Please check your API key and try again.');

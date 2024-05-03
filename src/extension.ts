@@ -10,7 +10,7 @@ import { VulnerabilitiesProvider } from "./vulnerabilitiesProvider";
 import axios from "axios"; // Ensure you install axios via npm
 import * as path from "path";
 import * as diff2html from "`diff2html";
-import { applyPatch } from "diff";
+import { applyPatch, diffChars } from "diff";
 
 export function activate(context: vscode.ExtensionContext) {
   // Register the vulnerabilities view
@@ -46,6 +46,13 @@ export function activate(context: vscode.ExtensionContext) {
 
         const currentContent = document.getText();
         const newContent = applyPatch(currentContent, diff);
+        
+        if (newContent === false) {
+          vscode.window.showErrorMessage(
+            "The diff couldn't be applied. This is likely due to your code being modified since the fix was generated. Please refresh the vulnerabilities and try again."
+          );
+          return;
+        }
 
         await editor.edit((editBuilder) => {
           const entireRange = new vscode.Range(
@@ -192,6 +199,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(disposable);
 }
 
+// Function to get the webview content
 function getWebviewContent(
   webview: vscode.Webview,
   vulnerability,
@@ -245,11 +253,11 @@ function getWebviewContent(
             <script src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html-ui.min.js"></script>
         </head>
         <body>
-            <h1>${vulnerability.issue.file_path}: ${vulnerability.issue.line_num}</h1>
+            <h1><a href="command:vscode.open?${filePath}">${vulnerability.issue.file_path}: ${vulnerability.issue.line_num}</a></h1>
             <strong><span class="${vulnerability.issue.urgency} severity">${vulnerability.issue.urgency}</span> - ${vulnerability.issue.classification}</strong>
-
+                <br>
   <hr>
-  <a href="command:vscode.open?${filePath}"><button class="secondary">See File</button></a>
+  <br>
   <a href="command:vscode.open?${goToCorgea}"><button class="secondary">See on Corgea</button></a>
   ${
     vulnerability.issue.on_hold

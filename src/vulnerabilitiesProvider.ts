@@ -60,7 +60,6 @@ export class VulnerabilitiesProvider implements vscode.TreeDataProvider<TreeItem
                 return [];
             }
 
-
             const files = new Map<string, VulnerabilityItem[]>();
             response.data.issues.forEach(v => {
                 const filePath = v.file_path;

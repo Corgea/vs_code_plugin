@@ -137,9 +137,10 @@ export function activate(context: vscode.ExtensionContext) {
   vscode.commands.registerCommand(
     "vulnerabilities.showDetails",
     async (vulnerability) => {
+      const fileName = path.basename(vulnerability.file_path);
       const panel = vscode.window.createWebviewPanel(
         "vulnerabilityDetails",
-        `Vulnerability Details: ${vulnerability.cwe_name}`,
+        `Corgea: ${fileName}:${vulnerability.line_num}`,
         vscode.ViewColumn.One,
         {
           enableScripts: true,

@@ -9,8 +9,7 @@ import {
 import { VulnerabilitiesProvider } from "./vulnerabilitiesProvider";
 import axios from "axios"; // Ensure you install axios via npm
 import * as path from "path";
-import * as diff2html from "`diff2html";
-import { applyPatch, diffChars } from "diff";
+import { applyPatch } from "diff";
 
 export function activate(context: vscode.ExtensionContext) {
   // Register the vulnerabilities view
@@ -45,7 +44,6 @@ export function activate(context: vscode.ExtensionContext) {
 
         const currentContent = document.getText();
         const newContent = applyPatch(currentContent, diff);
-
         
         if (newContent === false) {
           vscode.window.showErrorMessage(
@@ -54,6 +52,7 @@ export function activate(context: vscode.ExtensionContext) {
           return;
         } 
 
+        console.log(fileUri)
         const editor = await vscode.window.showTextDocument(document);
 
         await editor.edit((editBuilder) => {
@@ -175,7 +174,7 @@ export function activate(context: vscode.ExtensionContext) {
         context.subscriptions
       );
 
-      function applyDiffCommand(fileUri, diff) {
+      function applyDiffCommand(fileUri: vscode.Uri, diff:any) {
         const uri = vscode.Uri.parse(fileUri);
         vscode.commands.executeCommand("corgea.applyDiff", uri, diff);
       }
@@ -184,7 +183,7 @@ export function activate(context: vscode.ExtensionContext) {
         // Fetch the full details from the API
         const corgeaUrl = await getCorgeaUrl(context);
         const apiKey = await getStoredApiKey(context);
-        const url = `${corgeaUrl}/api/cli/issue/${vulnerability.id}`;
+        const url = `${corgeaUrl ?? ''}/api/cli/issue/${vulnerability.id}`;
         const response = await axios.get(url, {
           params: { token: apiKey },
         });
@@ -193,7 +192,7 @@ export function activate(context: vscode.ExtensionContext) {
             panel.webview,
             response.data,
             context,
-            corgeaUrl
+            corgeaUrl ?? ''
           );
         } else {
           panel.webview.html = `<html><body><h1>Error</h1><p>Could not load vulnerability details.</p></body></html>`;
@@ -201,9 +200,9 @@ export function activate(context: vscode.ExtensionContext) {
       } catch (error) {
         console.error(error);
         if (
-          error.response &&
-          error.response.status >= 400 &&
-          error.response.status < 500
+          (error as any).response &&
+          (error as any).response.status >= 400 &&
+          (error as any).response.status < 500
         ) {
           panel.webview.html = `<html><body><h1>Error</h1><p>Client error occurred while loading vulnerability details.</p></body></html>`;
         } else {
@@ -219,7 +218,7 @@ export function activate(context: vscode.ExtensionContext) {
 // Function to get the webview content
 function getWebviewContent(
   webview: vscode.Webview,
-  vulnerability,
+  vulnerability: any,
   context: any,
   corgeaUrl: string
 ) {
@@ -229,7 +228,7 @@ function getWebviewContent(
 
   const fullPath = vscode.Uri.file(
     path.join(
-      vscode.workspace.workspaceFolders[0].uri.fsPath,
+      vscode.workspace.workspaceFolders?.[0]?.uri?.fsPath ?? '',
       vulnerability.issue.file_path
     )
   );
@@ -246,7 +245,7 @@ function getWebviewContent(
 
   const filePath = encodeURIComponent(JSON.stringify(fileUri));
 
-  const filePathString = vscode.Uri.parse(fileUri).toString();
+  const filePathString = fileUri.toString();
 
   const goToCorgea = encodeURIComponent(JSON.stringify(CorgeaUri));
 

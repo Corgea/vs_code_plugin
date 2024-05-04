@@ -43,10 +43,15 @@ export async function getCorgeaUrl(
 
 // Function to verify the API key with the Corgea API
 export async function verifyAndStoreToken(
-  apiKey: string,
-  corgeaUrl: string,
+  apiKey: string | undefined,
+  corgeaUrl: string | undefined,
   context: vscode.ExtensionContext
 ): Promise<boolean> {
+  if (!apiKey || !corgeaUrl) {
+    vscode.window.showErrorMessage("API Key or URL is missing.");
+    return false;
+  }
+
   try {
     const url = `${corgeaUrl}/api/cli/verify/${apiKey}`;
     const response = await axios.get(url, {

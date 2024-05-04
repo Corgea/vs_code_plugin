@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { getCorgeaUrl, getStoredApiKey, isAuthenticated } from './tokenManager';
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import { getWorkspaceFolderPath } from './utils';
 
 
@@ -50,18 +50,28 @@ export class VulnerabilitiesProvider implements vscode.TreeDataProvider<TreeItem
                 return [];
             });
 
-            if (response.status >= 400) { 
+            if ((response as AxiosResponse).status >= 400 && (response as AxiosResponse).status < 500){ 
                 vscode.window.showInformationMessage('Corgea: No issues found. Please check your API key and try again.');
                 return [];
             }
 
-            if (response.data.issues === null) {  
+            if ((response as AxiosResponse).data.issues === null) {  
                 vscode.window.showInformationMessage('Corgea: No issues found for this project.');
                 return [];
             }
 
+
+
             const files = new Map<string, VulnerabilityItem[]>();
-            response.data.issues.forEach(v => {
+
+            interface Vulnerability {
+                file_path: string;
+                line_num: number;
+                classification: string;
+                urgency: string;
+                hold_fix: boolean;
+            }
+            (response as AxiosResponse).data.issues.forEach((v: Vulnerability) => {
                 const filePath = v.file_path;
                 if (!files.has(filePath)) {
                     files.set(filePath, []);
@@ -73,6 +83,7 @@ export class VulnerabilitiesProvider implements vscode.TreeDataProvider<TreeItem
                 } else {
                     label = '';
                 }
+                
 
                 const classification = v.classification.match(/(?:\('([^']+)'\))|$/);
                 // Use the matched group if available, otherwise fall back to the original classification string

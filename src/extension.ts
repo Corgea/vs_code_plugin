@@ -133,21 +133,35 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  const panels = new Map<string, vscode.WebviewPanel>();
+
   // Register command to show vulnerability details
   vscode.commands.registerCommand(
     "vulnerabilities.showDetails",
     async (vulnerability) => {
       const fileName = path.basename(vulnerability.file_path);
-      const panel = vscode.window.createWebviewPanel(
-        "vulnerabilityDetails",
-        `Corgea: ${fileName}:${vulnerability.line_num}`,
-        vscode.ViewColumn.One,
-        {
-          enableScripts: true,
-          retainContextWhenHidden: true,
-          enableCommandUris: true,
-        }
-      );
+      const panelId = `Corgea: ${fileName}:${vulnerability.line_num}`;
+    
+      let panel = panels.get(panelId);
+      if (panel) {
+        panel.reveal(vscode.ViewColumn.One);
+      } else {
+        panel = vscode.window.createWebviewPanel(
+          "vulnerabilityDetails",
+          panelId,
+          vscode.ViewColumn.One,
+          {
+            enableScripts: true,
+            retainContextWhenHidden: true,
+            enableCommandUris: true,
+          }
+        );
+        panels.set(panelId, panel);
+    
+        panel.onDidDispose(() => {
+          panels.delete(panelId);
+        });
+      }
 
       panel.webview.onDidReceiveMessage(
         (message) => {

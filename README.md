@@ -1,71 +1,44 @@
-# corgea README
+# Corgea for Visual Studio Code
 
-This is the README for your extension "corgea". After writing up a brief description, we recommend including the following sections.
+Corgea for Visual Studio Code is an extension that helps developers automatically detect and fix security vulnerabilities in their code. By integrating AI-driven insights directly into your development environment, Corgea ensures that your codebase remains secure against the latest threats with minimal manual intervention.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
-
-For example if there is an image subfolder under your extension project workspace:
-
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+- **Vulnerability Fixes Suggestions**: Provides AI-generated fixes for identified vulnerabilities.
+- **Interactive Vulnerability Panel**: Displays a dedicated sidebar panel with a detailed list of potential security issues.
+- **Diff Patching**: Allows you to apply suggested fixes directly with a simple click.
+- **Webview Details Panel**: Shows detailed vulnerability descriptions and remediation advice within a rich webview panel.
+- **API Key and URL Configuration**: Configure your connection to the Corgea backend easily through VS Code commands.
+- **Login**: Securely log in from VS Code.
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+- **Corgea account**: have an active Corgea account. 
+- **Visual Studio Code**: 1.50 or newer.
 
-## Extension Settings
+## Installation
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+To install the Corgea extension, follow these steps:
 
-For example:
+1. Open Visual Studio Code and navigate to the Extensions view by clicking on the square icon on the sidebar or pressing `Ctrl+Shift+X`.
+2. Search for "Corgea" and click on the install button.
+3. Once installed, you'll need to configure the API key and Corgea URL through the command palette (`Ctrl+Shift+P`), then select `Corgea: Set API Key`.
 
-This extension contributes the following settings:
+## Getting Started
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+Once the Corgea extension is installed and configured:
 
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
+1. **Set the API Key**: Open the command palette and run `Corgea: Login`. Follow the prompts to enter your Corgea URL and API key.
+2. **View Vulnerabilities**: Open the Corgea sidebar to see the current issues in your code.
+3. **Apply Fixes**: Click on a vulnerability to view details and apply fixes directly from the webview panel.
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
-
 ### 1.0.0
 
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
+- Initial release of the Corgea extension.
+- Full support for automatic vulnerability detection and fix application.
 
 ---
 
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+For more information visit [Corgea's Documentation website](https://docs.corgea.app).

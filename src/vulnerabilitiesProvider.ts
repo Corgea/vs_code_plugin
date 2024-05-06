@@ -50,12 +50,14 @@ export class VulnerabilitiesProvider implements vscode.TreeDataProvider<TreeItem
                 return [];
             });
 
+
+
             if ((response as AxiosResponse).status >= 400 && (response as AxiosResponse).status < 500){ 
                 vscode.window.showInformationMessage('Corgea: No issues found. Please check your API key and try again.');
                 return [];
             }
 
-            if ((response as AxiosResponse).data.issues === null) {  
+            if ((response as AxiosResponse).data.status === 'no_project_found') {  
                 vscode.window.showInformationMessage('Corgea: No issues found for this project.');
                 return [];
             }

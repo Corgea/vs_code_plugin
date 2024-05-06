@@ -2,7 +2,7 @@
   "name": "corgea",
   "displayName": "Corgea",
   "description": "Corgea helps you automatically fix insecure code. ",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "engines": {
     "vscode": "^1.88.0"
   },

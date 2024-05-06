@@ -5,8 +5,8 @@ import {
   getStoredApiKey,
   storeCorgeaUrl,
   getCorgeaUrl,
-} from "./tokenManager";
-import { VulnerabilitiesProvider } from "./vulnerabilitiesProvider";
+} from "./tokenManager.js";
+import { VulnerabilitiesProvider } from "./vulnerabilitiesProvider.js";
 import axios from "axios"; // Ensure you install axios via npm
 import * as path from "path";
 import { applyPatch } from "diff";
@@ -174,7 +174,7 @@ export function activate(context: vscode.ExtensionContext) {
         context.subscriptions
       );
 
-      function applyDiffCommand(fileUri: vscode.Uri, diff:any) {
+      function applyDiffCommand(fileUri: string, diff:any) {
         const uri = vscode.Uri.parse(fileUri);
         vscode.commands.executeCommand("corgea.applyDiff", uri, diff);
       }

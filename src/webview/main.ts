@@ -1,3 +1,7 @@
-import { provideVSCodeDesignSystem, vsCodeButton } from "@vscode/webview-ui-toolkit";
+async function loadToolkit() {
+    const toolkit = await import('@vscode/webview-ui-toolkit');
+    const { provideVSCodeDesignSystem, vsCodeButton } = toolkit;
+    provideVSCodeDesignSystem().register(vsCodeButton());
+}
 
-provideVSCodeDesignSystem().register(vsCodeButton());
+loadToolkit();

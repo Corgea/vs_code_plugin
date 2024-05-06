@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { getCorgeaUrl, getStoredApiKey, isAuthenticated } from './tokenManager';
+import { getCorgeaUrl, getStoredApiKey, isAuthenticated } from './tokenManager.js';
 import axios, { AxiosResponse } from 'axios';
-import { getWorkspaceFolderPath } from './utils';
+import { getWorkspaceFolderPath } from './utils.js';
 
 
 export class VulnerabilitiesProvider implements vscode.TreeDataProvider<TreeItem> {
@@ -89,16 +89,29 @@ export class VulnerabilitiesProvider implements vscode.TreeDataProvider<TreeItem
                 // Use the matched group if available, otherwise fall back to the original classification string
                 const vulnerabilityLabel = classification && classification[1] ? classification[1] : v.classification.replace(/^CWE-\d+: /, '');
                 const vulnerabilityItemLabel = `${v.urgency} - ${vulnerabilityLabel}: ${v.line_num} ${label}`;
-                files.get(filePath).push(new VulnerabilityItem(vulnerabilityItemLabel, vscode.TreeItemCollapsibleState.None, {
-                    command: 'vulnerabilities.showDetails',
-                    title: "Show Vulnerability Details",
-                    arguments: [v]
-                }));
+                let file = files.get(filePath);
+
+                if (file) {
+                    file.push(new VulnerabilityItem(vulnerabilityItemLabel, vscode.TreeItemCollapsibleState.None, {
+                        command: 'vulnerabilities.showDetails',
+                        title: "Show Vulnerability Details",
+                        arguments: [v]
+                    }));
+                } else {
+                    console.error('File not found');
+                    //show error message
+                    vscode.window.showInformationMessage('Corgea: File not found. Please check if the file exists.');
+                }
+
             });
 
             // Sort vulnerabilities by line number ascending
             Array.from(files.keys()).sort().forEach(filePath => {
                 const vulnerabilities = files.get(filePath);
+                if (!vulnerabilities) {
+                    vscode.window.showInformationMessage('Corgea: No vulnerabilities found.');
+                    return;
+                }
                 vulnerabilities.sort((a, b) => {
                     const lineNumA = parseInt(a.label.split(':')[1].trim());
                     const lineNumB = parseInt(b.label.split(':')[1].trim());
@@ -107,7 +120,7 @@ export class VulnerabilitiesProvider implements vscode.TreeDataProvider<TreeItem
             });
 
             return Array.from(files.keys()).map(filePath => 
-                new FileItem(filePath, files.get(filePath))
+                new FileItem(filePath, files.get(filePath) || [])
             );
         } else if (element instanceof FileItem) {
             return element.children;

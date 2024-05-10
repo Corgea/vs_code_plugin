@@ -24,14 +24,14 @@ export class VulnerabilitiesProvider implements vscode.TreeDataProvider<TreeItem
             const authenticated = await isAuthenticated(this.context); // Check if the user is authenticated
             if (!authenticated) {
                 // Return a TreeItem that prompts the user to authenticate
-                return [new TreeItem("Not logged in - Run '>Corgea: Login' from the command pallete", vscode.TreeItemCollapsibleState.None)];
+                return [new TreeItem("Not logged in - Run '>Corgea: Login' from the command pallete.", vscode.TreeItemCollapsibleState.None)];
             }
 
 
             const workspacePath = getWorkspaceFolderPath();
             if (!workspacePath) {
-                vscode.window.showInformationMessage('No fixes loaded from Corgea as no workspace is open. Open a workspace and try again.');
-                return [];
+                // Return a TreeItem that show that no fixes were loaded.
+                return [new TreeItem("This projects doesn't have fixes in Corgea.", vscode.TreeItemCollapsibleState.None)];
             }
 
         
@@ -58,8 +58,7 @@ export class VulnerabilitiesProvider implements vscode.TreeDataProvider<TreeItem
             }
 
             if ((response as AxiosResponse).data.status === 'no_project_found') {  
-                vscode.window.showInformationMessage('Corgea: No issues found for this project.');
-                return [];
+                return [new TreeItem("This projects doesn't have fixes in Corgea.", vscode.TreeItemCollapsibleState.None)];
             }
 
 

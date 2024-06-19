@@ -3,6 +3,9 @@
 All notable changes to the "corgea" extension will be documented in this file.
 
 ## 1.0.5
+- Fixed bug in vulnerabilities being processed.
+
+## 1.0.5
 - Added False Positive detection.
 - Improved status messages.
 - Apply Fix opens document on the specific line.

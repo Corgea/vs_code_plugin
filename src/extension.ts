@@ -253,12 +253,13 @@ function getWebviewContent(
   const goToCorgea = encodeURIComponent(JSON.stringify(CorgeaUri));
 
   const diffString = vulnerability.fix.diff;
+  
 
   try {
-    const false_positive_reason = vulnerability.issue.false_positive.reasoning;
-
+      var false_positive_reason: any = vulnerability.issue.false_positive.reasoning;
   } catch (error) {
-    const false_positive_reason = NaN;
+      var false_positive_reason: any = NaN;
+      console.log("No false positive reasoning");
   }
 
   const logoPath = vscode.Uri.joinPath(

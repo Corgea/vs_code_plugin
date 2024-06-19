@@ -71,6 +71,7 @@ export class VulnerabilitiesProvider implements vscode.TreeDataProvider<TreeItem
                 classification: string;
                 urgency: string;
                 hold_fix: boolean;
+                hold_reason: string;
             }
             (response as AxiosResponse).data.issues.forEach((v: Vulnerability) => {
                 const filePath = v.file_path;
@@ -78,11 +79,25 @@ export class VulnerabilitiesProvider implements vscode.TreeDataProvider<TreeItem
                     files.set(filePath, []);
                 }
 
-                let label;
+                let label = ''; // Default label is empty
+
                 if (v.hold_fix === true) {
-                    label = '- On Hold';
-                } else {
-                    label = '';
+                    switch (v.hold_reason) {
+                        case "language":
+                            label = '- Unsupported';
+                            break;
+                        case "gpt_error":
+                            label = '- On Hold';
+                            break;
+                        case "false_positive":
+                            label = '- False Positive Detected';
+                            break;
+                        case "plan":
+                            label = '- On Hold';
+                            break;
+                        default:
+                            label = '- Unspecified Reason'; // Optional: Handle unexpected reasons
+                    }
                 }
                 
 

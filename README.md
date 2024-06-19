@@ -32,12 +32,6 @@ Once the Corgea extension is installed and configured:
 2. **View Vulnerabilities**: Open the Corgea sidebar to see the current issues in your code.
 3. **Apply Fixes**: Click on a vulnerability to view details and apply fixes directly from the webview panel.
 
-## Release Notes
-
-### 1.0.0
-
-- Initial release of the Corgea extension.
-- Full support for automatic vulnerability detection and fix application.
 
 ---
 

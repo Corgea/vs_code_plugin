@@ -321,10 +321,20 @@ function getWebviewContent(
 
         <div id="diffElement"></div>
 
-        <br><br>
-        <div class="card">
-          <div class="card-header">Fix Explanation</div>
-          <div class="card-body"><p class="fix_explanation">${vulnerability.fix.explanation}</p></div>
+        <br>
+        <div class="row">
+          <div class="col-lg-6">
+            <div class="card">
+              <div class="card-header">Issue Explanation</div>
+              <div class="card-body"><p class="fix_explanation">${vulnerability.issue.explanation}</p></div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="card">
+              <div class="card-header">Summary of Changes</div>
+              <div class="card-body"><p class="fix_explanation">${vulnerability.fix.explanation}</p></div>
+            </div>
+          </div>
         </div>
 
         <script>

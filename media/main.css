@@ -17,6 +17,27 @@ body {
     height: 100px;
 }
 
+.col-lg-12 {
+    width: 100%;
+}
+
+.col-lg-9 {
+    width: 75%;
+}
+
+.col-lg-6 {
+    width: 50%;
+}
+
+.col-lg-3 {
+    width: 25%;
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+}
+
 button {
     border: none;
     padding: 10px;
@@ -39,6 +60,7 @@ button {
     border: 1px solid #373737;
     border-radius: 3px;
     margin: 10px 0;
+    width: 99%;
 }
 
 .card-header {

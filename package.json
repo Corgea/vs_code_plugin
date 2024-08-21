@@ -3,7 +3,7 @@
   "displayName": "Corgea",
   "publisher": "Corgea",
   "description": "Corgea helps you automatically fix insecure code.",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "icon": "images/logo.png",
   "engines": {
     "vscode": "^1.50.0"

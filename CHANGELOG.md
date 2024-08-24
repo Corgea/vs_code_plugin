@@ -2,7 +2,11 @@
 
 All notable changes to the "corgea" extension will be documented in this file.
 
-## 1.0.5
+## 1.0.7
+- Added issue explanations to each issue
+- Fixed bug that showed issues from multiple scans
+
+## 1.0.6
 - Fixed bug in vulnerabilities being processed.
 
 ## 1.0.5

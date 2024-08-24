@@ -104,7 +104,7 @@ export class VulnerabilitiesProvider implements vscode.TreeDataProvider<TreeItem
                 const classification = v.classification.match(/(?:\('([^']+)'\))|$/);
                 // Use the matched group if available, otherwise fall back to the original classification string
                 const vulnerabilityLabel = classification && classification[1] ? classification[1] : v.classification.replace(/^CWE-\d+: /, '');
-                const vulnerabilityItemLabel = `${v.urgency} - ${vulnerabilityLabel}: ${v.line_num} ${label}`;
+                const vulnerabilityItemLabel = `${vulnerabilityLabel}: ${v.line_num} ${label}`;
                 let file = files.get(filePath);
 
                 if (file) {

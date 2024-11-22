@@ -1,0 +1,44 @@
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+          fetch-depth: 1
+
+    - name: Automatic GitHub Release
+      uses: Atypon-OpenSource/github-action-npm-release@main
+      id: release
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Install Node.js
+      uses: actions/setup-node@v4
+      if: steps.release.outputs.released == 'true'
+      with:
+        node-version: 18.x
+
+    - run: npm install
+      if: steps.release.outputs.released == 'true'
+
+    - run: xvfb-run -a npm test
+      if: runner.os == 'Linux' && steps.release.outputs.released == 'true'
+
+    - name: Publish
+      if: success() && steps.release.outputs.released == 'true'
+      run: npm run deploy
+      env:
+        VSCE_PAT: ${{ secrets.VSCE_PAT }}

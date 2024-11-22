@@ -252,7 +252,7 @@ function getWebviewContent(
 
   const goToCorgea = encodeURIComponent(JSON.stringify(CorgeaUri));
 
-  const diffString = vulnerability.fix.diff;
+  const diffString = vulnerability.fix?.diff;
   
 
   try {

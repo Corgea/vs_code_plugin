@@ -82,6 +82,7 @@ button {
 
 .fix_explanation {
     font-size: medium;
+    white-space: pre-wrap;
 }
 hr {
     border: 0;

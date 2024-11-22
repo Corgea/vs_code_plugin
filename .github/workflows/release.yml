@@ -20,7 +20,7 @@ jobs:
           fetch-depth: 1
 
     - name: Automatic GitHub Release
-      uses: Atypon-OpenSource/github-action-npm-release@main
+      uses: justincy/github-action-npm-release@2.0.1
       id: release
       with:
         token: ${{ secrets.GITHUB_TOKEN }}

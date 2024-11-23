@@ -11,7 +11,9 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
@@ -51,12 +53,14 @@
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "vscode-test",
-    "deploy": "vsce publish"
+    "deploy": "vsce publish",
+    "format": "prettier --write \"src/**/*.ts\" \"./**/*.css\""
   },
   "devDependencies": {
     "@types/diff": "^5.2.0",
     "@types/mocha": "^10.0.6",
     "@types/node": "18.x",
+    "@types/pug": "^2.0.10",
     "@types/vscode": "^1.50.0",
     "@typescript-eslint/eslint-plugin": "^7.7.1",
     "@typescript-eslint/parser": "^7.7.1",
@@ -64,11 +68,13 @@
     "@vscode/test-electron": "^2.3.9",
     "@vscode/vsce": "^3.2.1",
     "eslint": "^8.57.0",
+    "prettier": "^3.3.3",
     "typescript": "^5.4.5"
   },
   "dependencies": {
     "@vscode/webview-ui-toolkit": "^1.4.0",
     "axios": "^1.6.8",
-    "diff": "^5.2.0"
+    "diff": "^5.2.0",
+    "pug": "^3.0.3"
   }
 }

@@ -4,6 +4,7 @@ import StorageManager, {
   StorageSecretKeys,
 } from "./storageManager";
 import Vulnerability from "../types/vulnerability";
+import VulnerabilityDetails from "../types/vulnerabilityDetails";
 
 export default class APIManager {
   private static async getBaseUrl(): Promise<string> {
@@ -37,7 +38,7 @@ export default class APIManager {
 
   public static async getVulnerabilityDetails(
     vulnerabilityId: string,
-  ): Promise<any> {
+  ): Promise<VulnerabilityDetails> {
     const corgeaUrl = await APIManager.getBaseUrl();
     const apiKey = await APIManager.getApiKey();
     try {

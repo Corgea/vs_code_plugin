@@ -10,9 +10,10 @@ export default class VulnerabilitiesProvider
 {
   public static readonly viewName = "vulnerabilitiesView";
 
-  private _onDidChangeTreeData: vscode.EventEmitter<TreeItem | undefined> =
-    new vscode.EventEmitter<TreeItem | undefined>();
-  readonly onDidChangeTreeData: vscode.Event<TreeItem | undefined> =
+  private static _onDidChangeTreeData: vscode.EventEmitter<
+    TreeItem | undefined
+  > = new vscode.EventEmitter<TreeItem | undefined>();
+  static readonly onDidChangeTreeData: vscode.Event<TreeItem | undefined> =
     this._onDidChangeTreeData.event;
 
   @OnCommand("vulnerabilities.refreshEntry")
@@ -20,7 +21,7 @@ export default class VulnerabilitiesProvider
   @OnEvent("workspace.document_saved")
   @OnEvent("internal.login")
   refresh(): void {
-    this._onDidChangeTreeData.fire(undefined);
+    VulnerabilitiesProvider._onDidChangeTreeData.fire(undefined);
   }
 
   getTreeItem(element: TreeItem): vscode.TreeItem {
@@ -169,7 +170,7 @@ export default class VulnerabilitiesProvider
 
   @OnEvent("internal.logout")
   clearData(): void {
-    this._onDidChangeTreeData.fire(undefined);
+    VulnerabilitiesProvider._onDidChangeTreeData.fire(undefined);
   }
 }
 

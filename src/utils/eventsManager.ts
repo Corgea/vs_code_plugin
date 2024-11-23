@@ -5,7 +5,13 @@ export default class EventsManager {
 
   public static emit(name: string, ...args: any[]): void {
     if (!this.eventsListeners[name]) return;
-    this.eventsListeners[name].forEach((listener) => listener(...args));
+    this.eventsListeners[name].forEach((listener) => {
+      try {
+        listener(...args);
+      } catch (error) {
+        console.error(error);
+      }
+    });
   }
 
   public static registerEventListener = (name: string): MethodDecorator => {
@@ -16,7 +22,8 @@ export default class EventsManager {
     ) {
       if (!EventsManager.eventsListeners[name])
         EventsManager.eventsListeners[name] = [];
-      EventsManager.eventsListeners[name].push(descriptor.value);
+      const boundMethod = descriptor.value.bind(target);
+      EventsManager.eventsListeners[name].push(boundMethod);
     };
   };
 }

@@ -21,7 +21,7 @@ export default class CommandsManager {
       propertyKey: string | symbol,
       descriptor: PropertyDescriptor,
     ) {
-      CommandsManager.commandsListeners[name] = descriptor.value;
+      CommandsManager.commandsListeners[name] = descriptor.value.bind(target);
     };
   };
 }

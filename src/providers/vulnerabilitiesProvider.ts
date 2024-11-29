@@ -44,9 +44,8 @@ export default class VulnerabilitiesProvider
         ];
       }
 
-      let workspacePath: any = WorkspacManager.getWorkspaceFolderURI();
-      workspacePath = workspacePath ? workspacePath.fsPath : undefined;
-      if (!workspacePath) {
+      const potentialNames = await WorkspacManager.getWorkspacePotentialNames();
+      if (!potentialNames || potentialNames.length === 0) {
         // Return a TreeItem that show that no fixes were loaded.
         return [
           new TreeItem(
@@ -55,16 +54,9 @@ export default class VulnerabilitiesProvider
           ),
         ];
       }
-      const remotes = (await GitManager.getRemoteUrls(workspacePath))
-        .map((item) => {
-          const repoName = item.split("/").pop()?.replace(".git", "");
-          return repoName || "";
-        })
-        .filter(Boolean);
-      const response = await APIManager.getProjectVulnerabilities([
-        path.basename(workspacePath),
-        ...remotes,
-      ]).catch((error) => {
+      const response = await APIManager.getProjectVulnerabilities(
+        potentialNames,
+      ).catch((error) => {
         console.error(error);
         vscode.window.showErrorMessage(
           "Corgea: Failed to fetch issues. Please try again.",

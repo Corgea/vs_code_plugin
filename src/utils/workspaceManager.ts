@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
+import GitManager from "./gitManager";
 
 export default class WorkspaceManager {
   public static getWorkspaceFolderURI(): vscode.Uri | undefined {
@@ -12,12 +13,16 @@ export default class WorkspaceManager {
     return undefined;
   }
 
-  public static getWorkspaceFolderPath(): string | undefined {
-    const workspaceURI = this.getWorkspaceFolderURI();
-    if (!workspaceURI) {
-      return undefined;
-    }
-    return path.basename(workspaceURI.fsPath);
+  public static async getWorkspacePotentialNames(): Promise<string[]> {
+    let workspacePath: any = this.getWorkspaceFolderURI();
+    workspacePath = workspacePath ? workspacePath.fsPath : undefined;
+    const remotes = (await GitManager.getRemoteUrls(workspacePath))
+      .map((item) => {
+        const repoName = item.split("/").pop()?.replace(".git", "");
+        return repoName || "";
+      })
+      .filter(Boolean);
+    return [path.basename(workspacePath), ...remotes];
   }
 
   public static getRelativePathToWorkspace(

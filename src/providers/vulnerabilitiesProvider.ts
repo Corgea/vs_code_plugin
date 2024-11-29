@@ -4,8 +4,6 @@ import APIManager from "../utils/apiManager";
 import StorageManager, { StorageKeys } from "../utils/storageManager";
 import { OnCommand } from "../utils/commandsManager";
 import { OnEvent } from "../utils/eventsManager";
-import GitManager from "../utils/gitManager";
-import * as path from "path";
 
 export default class VulnerabilitiesProvider
   implements vscode.TreeDataProvider<TreeItem>

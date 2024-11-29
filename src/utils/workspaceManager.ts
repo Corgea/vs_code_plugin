@@ -20,9 +20,8 @@ export default class WorkspaceManager {
       .map((item) => {
         const repoName = item.split("/").pop()?.replace(".git", "");
         return repoName || "";
-      })
-      .filter(Boolean);
-    return [path.basename(workspacePath), ...remotes];
+      });
+    return [path.basename(workspacePath), ...remotes].filter(Boolean);
   }
 
   public static getRelativePathToWorkspace(

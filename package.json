@@ -51,6 +51,7 @@
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "vscode-test",
+    "package": "vsce package",
     "deploy": "vsce publish",
     "format": "prettier --write \"src/**/*.ts\" \"./**/*.css\""
   },

@@ -11,7 +11,7 @@ export default class ViewsManager {
   public static render(view: Views, data: any): string {
     const path = vscode.Uri.joinPath(
       ContextManager.getContext().extensionUri,
-      "src/views/",
+      "./assets/views/",
       view,
     );
     const template = compileFile(path.fsPath);

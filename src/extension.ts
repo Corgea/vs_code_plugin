@@ -33,6 +33,10 @@ export function activate(context: vscode.ExtensionContext) {
   vscode.workspace.onDidCloseTextDocument((document) => {
     EventsManager.emit("workspace.document_closed", document);
   });
+
+  vscode.workspace.onDidChangeTextDocument((event) => {
+    EventsManager.emit("workspace.document_changed", event.document);
+  });
 }
 
 export function deactivate() {}

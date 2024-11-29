@@ -4,6 +4,8 @@ import APIManager from "../utils/apiManager";
 import StorageManager, { StorageKeys } from "../utils/storageManager";
 import { OnCommand } from "../utils/commandsManager";
 import { OnEvent } from "../utils/eventsManager";
+import GitManager from "../utils/gitManager";
+import * as path from "path";
 
 export default class VulnerabilitiesProvider
   implements vscode.TreeDataProvider<TreeItem>
@@ -42,7 +44,8 @@ export default class VulnerabilitiesProvider
         ];
       }
 
-      const workspacePath = WorkspacManager.getWorkspaceFolderPath();
+      let workspacePath: any = WorkspacManager.getWorkspaceFolderURI();
+      workspacePath = workspacePath ? workspacePath.fsPath : undefined;
       if (!workspacePath) {
         // Return a TreeItem that show that no fixes were loaded.
         return [
@@ -52,10 +55,16 @@ export default class VulnerabilitiesProvider
           ),
         ];
       }
-
-      const response = await APIManager.getProjectVulnerabilities(
-        workspacePath,
-      ).catch((error) => {
+      const remotes = (await GitManager.getRemoteUrls(workspacePath))
+        .map((item) => {
+          const repoName = item.split("/").pop()?.replace(".git", "");
+          return repoName || "";
+        })
+        .filter(Boolean);
+      const response = await APIManager.getProjectVulnerabilities([
+        path.basename(workspacePath),
+        ...remotes,
+      ]).catch((error) => {
         console.error(error);
         vscode.window.showErrorMessage(
           "Corgea: Failed to fetch issues. Please try again.",

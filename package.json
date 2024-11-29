@@ -74,6 +74,7 @@
     "@vscode/webview-ui-toolkit": "^1.4.0",
     "axios": "^1.6.8",
     "diff": "^5.2.0",
-    "pug": "^3.0.3"
+    "pug": "^3.0.3",
+    "simple-git": "^3.27.0"
   }
 }

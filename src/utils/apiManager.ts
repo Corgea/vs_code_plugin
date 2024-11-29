@@ -95,7 +95,9 @@ export default class APIManager {
     }
   }
 
-  public static async getProjectVulnerabilities(workspacePath: string): Promise<
+  public static async getProjectVulnerabilities(
+    workspacePath: string | string[],
+  ): Promise<
     AxiosResponse<{
       status: string;
       issues: Vulnerability[];
@@ -105,12 +107,20 @@ export default class APIManager {
     const apiKey = await APIManager.getApiKey();
     APIManager.showLoadingStatus();
     try {
-      const response = await axios.get(`${corgeaUrl}/api/cli/issues`, {
-        params: {
-          token: apiKey,
-          project: workspacePath,
-        },
-      });
+      let response: any;
+      for (const path of workspacePath) {
+        response = await axios.get(`${corgeaUrl}/api/cli/issues`, {
+          params: {
+            token: apiKey,
+            project: path,
+          },
+        });
+        if (response.data.status === "no_project_found") {
+          continue;
+        } else {
+          break;
+        }
+      }
       return response;
     } catch (error) {
       console.error(error);

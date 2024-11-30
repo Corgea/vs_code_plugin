@@ -37,6 +37,14 @@ export function activate(context: vscode.ExtensionContext) {
   vscode.workspace.onDidChangeTextDocument((event) => {
     EventsManager.emit("workspace.document_changed", event.document);
   });
+
+  context.subscriptions.push(
+    vscode.window.registerUriHandler({
+      handleUri(uri: vscode.Uri) {
+        EventsManager.emit("navigate", uri);
+      },
+    }),
+  );
 }
 
 export function deactivate() {}

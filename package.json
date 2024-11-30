@@ -11,9 +11,16 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": ["onUri"],
   "main": "./out/extension.js",
   "contributes": {
+    "uriHandler": [
+      {
+        "scheme": "vscode",
+        "authority": "extension",
+        "path": "/Corgea.corgea/issues/*"
+      }
+    ],
     "commands": [
       {
         "command": "corgea.setApiKey",

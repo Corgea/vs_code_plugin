@@ -16,10 +16,19 @@ export default class VulnerabilitiesProvider
   static readonly onDidChangeTreeData: vscode.Event<TreeItem | undefined> =
     this._onDidChangeTreeData.event;
 
+  public get _onDidChangeTreeData(): vscode.EventEmitter<TreeItem | undefined> {
+    return VulnerabilitiesProvider._onDidChangeTreeData;
+  }
+
+  public get onDidChangeTreeData(): vscode.Event<TreeItem | undefined> {
+    return this._onDidChangeTreeData.event;
+  }
+
   @OnCommand("vulnerabilities.refreshEntry")
   @OnEvent("workspace.document_opened")
   @OnEvent("workspace.document_saved")
   @OnEvent("internal.login")
+  @OnEvent("internal.lgout")
   refresh(): void {
     VulnerabilitiesProvider._onDidChangeTreeData.fire(undefined);
   }
@@ -30,21 +39,30 @@ export default class VulnerabilitiesProvider
 
   async getChildren(element?: TreeItem): Promise<TreeItem[]> {
     if (!element) {
-      const authenticated = StorageManager.getValue<boolean>(
+      const authenticated = await StorageManager.getValue<boolean>(
         StorageKeys.isLoggedIn,
       );
       if (!authenticated) {
-        return [
-          new TreeItem(
-            "Not logged in - Run '>Corgea: Login' from the command pallete.",
-            vscode.TreeItemCollapsibleState.None,
-          ),
-        ];
+        const helpMessage = new TreeItem(
+          "Seems like you are not logged in.",
+          vscode.TreeItemCollapsibleState.None,
+        );
+        const loginItem = new vscode.TreeItem(
+          "Click Here to login",
+          vscode.TreeItemCollapsibleState.None,
+        );
+
+        loginItem.command = {
+          command: "corgea.setApiKey",
+          title: "Login",
+        };
+
+        loginItem.iconPath = new vscode.ThemeIcon("key");
+        return [helpMessage, loginItem as TreeItem];
       }
 
       const potentialNames = await WorkspacManager.getWorkspacePotentialNames();
       if (!potentialNames || potentialNames.length === 0) {
-        // Return a TreeItem that show that no fixes were loaded.
         return [
           new TreeItem(
             "This projects doesn't have fixes in Corgea.",

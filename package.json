@@ -28,6 +28,16 @@
         "category": "Corgea"
       },
       {
+        "command": "corgea.disableHighlighting",
+        "title": "Disable Vulnerability Highlighting",
+        "category": "Corgea"
+      },
+      {
+        "command": "corgea.enableHighlighting",
+        "title": "Enable Vulnerability Highlighting",
+        "category": "Corgea"
+      },
+      {
         "command": "corgea.logout",
         "title": "Logout",
         "category": "Corgea"

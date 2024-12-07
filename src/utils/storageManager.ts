@@ -3,6 +3,7 @@ import ContextManager from "./contextManager";
 export enum StorageKeys {
   isLoggedIn = "isLoggedIn",
   corgeaUrl = "corgeaUrl",
+  highlightingEnabled = "highlightingEnabled",
 }
 
 export enum StorageSecretKeys {

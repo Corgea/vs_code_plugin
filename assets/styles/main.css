@@ -7,6 +7,8 @@
 body {
   margin: 0 auto;
   padding: 3%;
+  --bs-body-bg: transparent;
+  --bs-code-color: #fff;
 }
 
 .main div {
@@ -40,6 +42,21 @@ button {
   margin: 10px 0;
 }
 
+.card.split-view {
+  width: calc(50% - 0.5rem);
+}
+
+@media screen and (max-width: 768px) {
+  .card.split-view {
+    width: 100%;
+  }
+}
+
+.card-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
 .card-header {
   font-size: 18px;
   font-weight: bold;
@@ -93,4 +110,17 @@ hr {
 
 .mr-2 {
   margin-right: 10px;
+}
+
+.p-0 {
+  padding: 0;
+}
+
+.w-100 {
+  width: 100%;
+}
+
+.suggested-change {
+  display: flex;
+  justify-content: space-between;
 }

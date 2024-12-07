@@ -111,19 +111,19 @@ export default class VulnerabilitiesProvider
         if (v.hold_fix === true) {
           switch (v.hold_reason) {
             case "language":
-              label = "- Unsupported";
+              label = "Unsupported";
               break;
             case "gpt_error":
-              label = "- On Hold";
+              label = "On Hold";
               break;
             case "false_positive":
-              label = "- False Positive Detected";
+              label = "False Positive Detected";
               break;
             case "plan":
-              label = "- On Hold";
+              label = "On Hold";
               break;
             default:
-              label = "- Unspecified Reason"; // Optional: Handle unexpected reasons
+              label = "Unspecified Reason"; // Optional: Handle unexpected reasons
           }
         }
 
@@ -133,7 +133,7 @@ export default class VulnerabilitiesProvider
           classification && classification[1]
             ? classification[1]
             : v.classification.replace(/^CWE-\d+: /, "");
-        const vulnerabilityItemLabel = `${v.urgency} - ${vulnerabilityLabel}: ${v.line_num} ${label}`;
+        const vulnerabilityItemLabel = `${v.urgency}${label ? " - " : ""}${label} - ${vulnerabilityLabel}: ${v.line_num}`;
         let file = files.get(filePath);
 
         if (file) {

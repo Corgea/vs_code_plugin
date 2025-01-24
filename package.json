@@ -11,14 +11,16 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": ["onUri"],
+  "activationEvents": [
+    "onUri"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "uriHandler": [
       {
         "scheme": "vscode",
         "authority": "extension",
-        "path": "/Corgea.corgea/issues/*"
+        "path": "/Corgea.corgea/issue/*"
       }
     ],
     "commands": [
@@ -92,6 +94,8 @@
     "axios": "^1.6.8",
     "diff": "^5.2.0",
     "pug": "^3.0.3",
-    "simple-git": "^3.27.0"
+    "react": "^18.2.0",
+    "simple-git": "^3.27.0",
+    "vsce": "^2.15.0"
   }
 }

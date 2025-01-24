@@ -40,7 +40,9 @@ export default class WorkspaceManager {
   public static comparePaths(path1: string, path2: string): boolean {
     const normalizedPath1 = path.normalize(path1);
     const normalizedPath2 = path.normalize(path2);
-
-    return normalizedPath1 === normalizedPath2;
+    // Remove leading backslashes if present for windows
+    const cleanPath1 = normalizedPath1.replace(/^\\+/, '');
+    const cleanPath2 = normalizedPath2.replace(/^\\+/, '');
+    return cleanPath1 === cleanPath2;
   }
 }

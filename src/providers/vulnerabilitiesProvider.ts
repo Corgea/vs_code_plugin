@@ -101,39 +101,14 @@ export default class VulnerabilitiesProvider
       const files = new Map<string, VulnerabilityItem[]>();
 
       response.data.issues.forEach((v) => {
-        const filePath = v.file_path;
+        const filePath = v.location.file.path;
         if (!files.has(filePath)) {
           files.set(filePath, []);
         }
 
-        let label = ""; // Default label is empty
-
-        if (v.hold_fix === true) {
-          switch (v.hold_reason) {
-            case "language":
-              label = "Unsupported";
-              break;
-            case "gpt_error":
-              label = "On Hold";
-              break;
-            case "false_positive":
-              label = "False Positive Detected";
-              break;
-            case "plan":
-              label = "On Hold";
-              break;
-            default:
-              label = "Unspecified Reason"; // Optional: Handle unexpected reasons
-          }
-        }
-
-        const classification = v.classification.match(/(?:\('([^']+)'\))|$/);
-        // Use the matched group if available, otherwise fall back to the original classification string
-        const vulnerabilityLabel =
-          classification && classification[1]
-            ? classification[1]
-            : v.classification.replace(/^CWE-\d+: /, "");
-        const vulnerabilityItemLabel = `${v.urgency}${label ? " - " : ""}${label} - ${vulnerabilityLabel}: ${v.line_num}`;
+        let label = v.status; // Default label is empty
+        const vulnerabilityLabel = v.classification?.name;
+        const vulnerabilityItemLabel = `${v.urgency}${label ? " - " : ""}${label} - ${vulnerabilityLabel}: ${v.location.line_number}`;
         let file = files.get(filePath);
 
         if (file) {

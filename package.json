@@ -40,6 +40,11 @@
         "category": "Corgea"
       },
       {
+        "command": "corgea.scan",
+        "title": "Scan",
+        "category": "Corgea"
+      },
+      {
         "command": "corgea.logout",
         "title": "Logout",
         "category": "Corgea"

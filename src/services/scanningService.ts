@@ -36,7 +36,7 @@ export default class scanningService {
 
     // Check if corgea is installed
     if (!scanningService.isCorgeaInstalled(pythonPath.fsPath)) {
-      vscode.window.showInformationMessage("Installing Corgea...");
+      vscode.window.showInformationMessage("Installing Corgea cli...");
       scanningService.installCorgea(pythonPath.fsPath);
     }
 
@@ -133,9 +133,9 @@ export default class scanningService {
   private static installCorgea(pythonPath: string): void {
     try {
       execSync(`${pythonPath} -m pip install corgea-cli`, { stdio: "inherit" });
-      vscode.window.showInformationMessage("Corgea installed successfully!");
+      vscode.window.showInformationMessage("Corgea cli installed successfully!");
     } catch (error) {
-      vscode.window.showErrorMessage("Failed to install Corgea.");
+      vscode.window.showErrorMessage("Failed to install Corgea cli.");
     }
   }
 

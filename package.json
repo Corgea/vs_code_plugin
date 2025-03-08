@@ -40,8 +40,13 @@
         "category": "Corgea"
       },
       {
-        "command": "corgea.scan",
+        "command": "corgea.scan-uncommitted",
         "title": "Scan Uncommitted Changes",
+        "category": "Corgea"
+      },
+      {
+        "command": "corgea.scan-full",
+        "title": "Scan All Files",
         "category": "Corgea"
       },
       {

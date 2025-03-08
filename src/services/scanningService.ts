@@ -9,13 +9,18 @@ import StorageManager, { StorageKeys, StorageSecretKeys } from "../utils/storage
 
 export default class scanningService {
   
+  @OnCommand("corgea.scan-uncommitted")
+  public static async scanUncommittedFiles() {
+    await scanningService.scanProject(false);
+  }
+
   /*
     Scan cammand should only scan changed files unless the projecty doesnt have any previous scan results
     Options to be (forced full scan)
     before commit (git hooks integration), warning...
   */
-  @OnCommand("corgea.scan")
-  public static async scanProject() {
+  @OnCommand("corgea.scan-full")
+  public static async scanProject(isFullScan: boolean = true) {
     const contextUri = ContextManager.getContext().extensionUri;
     const myVenvPath = vscode.Uri.joinPath(contextUri, "./assets/runtimes/python/myvenv");
 
@@ -60,7 +65,7 @@ export default class scanningService {
     } else {
       TerminalManager.executeCommand("clear");
     }
-    TerminalManager.executeCommand(`${corgeaPath?.fsPath} scan`);
+    TerminalManager.executeCommand(`${corgeaPath?.fsPath} scan ${isFullScan ? "" : "--only-uncommitted"}`);
   }
 
   private static async ensureVirtualEnvExists(contextUri: vscode.Uri, myVenvPath: vscode.Uri) {

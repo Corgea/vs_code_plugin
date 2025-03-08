@@ -41,7 +41,7 @@
       },
       {
         "command": "corgea.scan",
-        "title": "Scan",
+        "title": "Scan Uncommitted Changes",
         "category": "Corgea"
       },
       {

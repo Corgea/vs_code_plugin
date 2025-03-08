@@ -16,6 +16,12 @@ export default class scanningService {
   */
   @OnCommand("corgea.scan")
   public static async scanProject() {
+    const contextUri = ContextManager.getContext().extensionUri;
+    const myVenvPath = vscode.Uri.joinPath(contextUri, "./assets/runtimes/python/myvenv");
+
+    // Ensure the virtual environment is set up
+    await scanningService.ensureVirtualEnvExists(contextUri, myVenvPath);
+
     const pythonPath = scanningService.getPythonPath();
     const corgeaPath = scanningService.getCorgeaPath();
     if (!pythonPath) {
@@ -55,6 +61,31 @@ export default class scanningService {
       TerminalManager.executeCommand("clear");
     }
     TerminalManager.executeCommand(`${corgeaPath?.fsPath} scan`);
+  }
+
+  private static async ensureVirtualEnvExists(contextUri: vscode.Uri, myVenvPath: vscode.Uri) {
+    try {
+      await vscode.workspace.fs.stat(myVenvPath);
+    } catch (error) {
+      const platform = os.platform();
+      let zipFileName = "";
+      if (platform === "win32") {
+        zipFileName = "myenv.windows.zip";
+      } else if (platform === "darwin") {
+        zipFileName = "myenv.mac.zip";
+      } else if (platform === "linux") {
+        zipFileName = "myenv.linux.zip";
+      }
+
+      const zipFilePath = vscode.Uri.joinPath(contextUri, `./assets/runtimes/python/${zipFileName}`);
+      try {
+        const extract = require('extract-zip');
+        await extract(zipFilePath.fsPath, { dir: myVenvPath.fsPath });
+      } catch (extractionError: any) {
+        vscode.window.showErrorMessage(`Failed to setup virtual environment. Please try again.`);
+        throw extractionError;
+      }
+    }
   }
 
   private static getPythonPath(): vscode.Uri | null {

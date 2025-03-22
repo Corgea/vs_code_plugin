@@ -67,7 +67,7 @@ export default class APIManager {
     }
   }
 
-  private static async getBaseClient(): Promise<AxiosInstance> {
+  private static async getBaseClient(showError: boolean = true): Promise<AxiosInstance> {
     const apiKey = await this.getApiKey();
     const client = axios.create({
       headers: { "CORGEA-TOKEN": apiKey },
@@ -77,7 +77,9 @@ export default class APIManager {
       response => response,
       error => {
         if (error.response && error.response.status === 401) {
-          vscode.window.showErrorMessage("Token is expired or invalid. Please update it.");
+          if (showError) {
+            vscode.window.showErrorMessage("Token is expired or invalid. Please update it.");
+          }
         }
         return Promise.reject(error);
       }
@@ -93,7 +95,7 @@ export default class APIManager {
       "Verifying API Key",
     );
     try {
-      const client = await this.getBaseClient();
+      const client = await this.getBaseClient(false);
       const url = `${corgeaUrl}/api/${this.apiVersion}/verify/${apiKey}`;
       const response = await client.get(url, {
         params: { url: corgeaUrl },

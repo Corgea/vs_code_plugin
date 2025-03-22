@@ -3,7 +3,7 @@
   "displayName": "Corgea",
   "publisher": "Corgea",
   "description": "Corgea helps you automatically fix insecure code.",
-  "version": "1.0.7",
+  "version": "1.1.0",
   "icon": "images/logo.png",
   "engines": {
     "vscode": "^1.50.0"
@@ -11,13 +11,42 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onUri"
+  ],
   "main": "./out/extension.js",
   "contributes": {
+    "uriHandler": [
+      {
+        "scheme": "vscode",
+        "authority": "extension",
+        "path": "/Corgea.corgea/issue/*"
+      }
+    ],
     "commands": [
       {
         "command": "corgea.setApiKey",
         "title": "Login",
+        "category": "Corgea"
+      },
+      {
+        "command": "corgea.disableHighlighting",
+        "title": "Disable Vulnerability Highlighting",
+        "category": "Corgea"
+      },
+      {
+        "command": "corgea.enableHighlighting",
+        "title": "Enable Vulnerability Highlighting",
+        "category": "Corgea"
+      },
+      {
+        "command": "corgea.scan-uncommitted",
+        "title": "Scan Uncommitted Changes",
+        "category": "Corgea"
+      },
+      {
+        "command": "corgea.scan-full",
+        "title": "Scan All Files",
         "category": "Corgea"
       },
       {
@@ -50,23 +79,34 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "package": "vsce package",
+    "deploy": "vsce publish",
+    "format": "prettier --write \"src/**/*.ts\" \"./**/*.css\""
   },
   "devDependencies": {
     "@types/diff": "^5.2.0",
     "@types/mocha": "^10.0.6",
     "@types/node": "18.x",
+    "@types/pug": "^2.0.10",
     "@types/vscode": "^1.50.0",
     "@typescript-eslint/eslint-plugin": "^7.7.1",
     "@typescript-eslint/parser": "^7.7.1",
     "@vscode/test-cli": "^0.0.8",
     "@vscode/test-electron": "^2.3.9",
+    "@vscode/vsce": "^3.2.1",
     "eslint": "^8.57.0",
+    "prettier": "^3.3.3",
     "typescript": "^5.4.5"
   },
   "dependencies": {
     "@vscode/webview-ui-toolkit": "^1.4.0",
     "axios": "^1.6.8",
-    "diff": "^5.2.0"
+    "diff": "^5.2.0",
+    "extract-zip": "^2.0.1",
+    "pug": "^3.0.3",
+    "react": "^18.2.0",
+    "simple-git": "^3.27.0",
+    "vsce": "^2.15.0"
   }
 }

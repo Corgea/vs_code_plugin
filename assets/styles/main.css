@@ -1,0 +1,126 @@
+.main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+body {
+  margin: 0 auto;
+  padding: 3%;
+  --bs-body-bg: transparent;
+  --bs-code-color: #fff;
+}
+
+.main div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100px;
+  height: 100px;
+}
+
+button {
+  border: none;
+  padding: 10px;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background-color: #2d6198;
+  color: #fff;
+}
+
+.btn-secondary {
+  background-color: #3a3d41;
+  color: #f8f8f8;
+}
+
+.card {
+  border: 1px solid #373737;
+  border-radius: 3px;
+  margin: 10px 0;
+}
+
+.card.split-view {
+  width: calc(50% - 0.5rem);
+}
+
+@media screen and (max-width: 768px) {
+  .card.split-view {
+    width: 100%;
+  }
+}
+
+.card-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+.card-header {
+  font-size: 18px;
+  font-weight: bold;
+  color: #d4d4d4;
+  border-bottom: 1px solid #373737;
+  padding: 10px; /* Add padding to the card-header */
+  background-color: #373737;
+}
+
+.card-body {
+  font-size: 16px;
+  padding: 10px;
+}
+
+.card-footer {
+  font-size: 14px;
+  padding: 10px; /* Move padding from card to card-footer */
+}
+
+.severity {
+  padding: 3px 10px;
+  border-radius: 5px;
+}
+
+.HI {
+  background: #c30000;
+  color: #fff;
+}
+.ME {
+  background: #d47500;
+  color: #fff;
+}
+
+.LO {
+  background: #fff700;
+  color: #333;
+}
+
+.fix_explanation,
+.issue_explanation {
+  font-size: medium;
+  white-space: pre-wrap;
+}
+
+hr {
+  border: 0;
+  height: 1px;
+  background: #373737;
+  margin: 10px 0;
+}
+
+.mr-2 {
+  margin-right: 10px;
+}
+
+.p-0 {
+  padding: 0;
+}
+
+.w-100 {
+  width: 100%;
+}
+
+.suggested-change {
+  display: flex;
+  justify-content: space-between;
+}

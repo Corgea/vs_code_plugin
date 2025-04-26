@@ -6,8 +6,7 @@ import { OnCommand } from "../utils/commandsManager";
 import { OnEvent } from "../utils/eventsManager";
 
 export default class VulnerabilitiesProvider
-  implements vscode.TreeDataProvider<TreeItem>
-{
+  implements vscode.TreeDataProvider<TreeItem> {
   public static readonly viewName = "vulnerabilitiesView";
 
   private static _onDidChangeTreeData: vscode.EventEmitter<
@@ -72,12 +71,20 @@ export default class VulnerabilitiesProvider
       }
       const response = await APIManager.getProjectVulnerabilities(
         potentialNames,
-      ).catch((error) => {
-        console.error(error);
-        vscode.window.showErrorMessage(
-          "Corgea: Failed to fetch issues. Please try again.",
-        );
-        return undefined;
+      ).catch(async (error) => {
+        if (error.status == 401) {
+          await StorageManager.setValue<boolean>(
+            StorageKeys.isLoggedIn,
+            false
+          );
+        }
+        return {
+          status: error.status,
+          data: {
+            status: "no_project_found"
+          },
+          issues: []
+        } as any;
       });
       if (!response) {
         return [];
@@ -100,7 +107,7 @@ export default class VulnerabilitiesProvider
 
       const files = new Map<string, VulnerabilityItem[]>();
 
-      response.data.issues.forEach((v) => {
+      response.data.issues.forEach((v: any) => {
         const filePath = v.location.file.path;
         if (!files.has(filePath)) {
           files.set(filePath, []);

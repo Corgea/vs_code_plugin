@@ -16,6 +16,7 @@ export default class WorkspaceManager {
   public static async getWorkspacePotentialNames(): Promise<string[]> {
     let workspacePath: any = this.getWorkspaceFolderURI();
     workspacePath = workspacePath ? workspacePath.fsPath : undefined;
+    if (!workspacePath) return [];
     const remotes = (await GitManager.getRemoteUrls(workspacePath)).map(
       (item) => {
         const repoName = item.split("/").pop()?.replace(".git", "");

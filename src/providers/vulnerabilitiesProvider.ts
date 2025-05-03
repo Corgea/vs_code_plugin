@@ -6,8 +6,7 @@ import { OnCommand } from "../utils/commandsManager";
 import { OnEvent } from "../utils/eventsManager";
 
 export default class VulnerabilitiesProvider
-  implements vscode.TreeDataProvider<TreeItem>
-{
+  implements vscode.TreeDataProvider<TreeItem> {
   public static readonly viewName = "vulnerabilitiesView";
 
   private static _onDidChangeTreeData: vscode.EventEmitter<
@@ -104,7 +103,14 @@ export default class VulnerabilitiesProvider
       }
 
       const files = new Map<string, VulnerabilityItem[]>();
-
+      if (response.data.issues.length === 0) {
+        return [
+          new TreeItem(
+            "Project doesnt't have any issue",
+            vscode.TreeItemCollapsibleState.None,
+          ),
+        ];
+      }
       response.data.issues.forEach((v: any) => {
         const filePath = v.location.file.path;
         if (!files.has(filePath)) {
@@ -161,7 +167,12 @@ export default class VulnerabilitiesProvider
     } else if (element instanceof FileItem) {
       return element.children;
     } else {
-      return [];
+      return [
+        new TreeItem(
+          "This projects doesn't have fixes in Corgea.",
+          vscode.TreeItemCollapsibleState.None,
+        ),
+      ]
     }
   }
 

@@ -116,7 +116,6 @@ export default class APIManager {
       const response = await client.get(url, {
         params: { url: corgeaUrl },
       });
-      this.checkForWarnings(response.headers, response.status);
       if (response.data.status === "ok") return true;
       return false;
     } catch (error) {

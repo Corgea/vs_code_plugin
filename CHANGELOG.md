@@ -2,6 +2,9 @@
 
 All notable changes to the "corgea" extension will be documented in this file.
 
+## 1.1.2
+- Fixed a bug: User when install the extension for the first time are having trouble logging it.
+
 ## 1.1.1
 - Fixed a bug where if the api changed (account got deleted or deactivated) to invlidate the login state in the extension
 

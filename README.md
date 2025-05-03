@@ -10,6 +10,8 @@ Corgea for Visual Studio Code is an extension that helps developers automaticall
 - **Webview Details Panel**: Shows detailed vulnerability descriptions and remediation advice within a rich webview panel.
 - **API Key and URL Configuration**: Configure your connection to the Corgea backend easily through VS Code commands.
 - **Login**: Securely log in from VS Code.
+- **Scan Uncommitted Changes**: Scans the uncommitted changes in your code.
+- **Scan All Files**: Scans all the files in your project.
 
 ## Requirements
 
@@ -31,6 +33,8 @@ Once the Corgea extension is installed and configured:
 1. **Set the API Key**: Open the command palette and run `Corgea: Login`. Follow the prompts to enter your Corgea URL and API key.
 2. **View Vulnerabilities**: Open the Corgea sidebar to see the current issues in your code.
 3. **Apply Fixes**: Click on a vulnerability to view details and apply fixes directly from the webview panel.
+4. **Scan Uncommitted Changes**: Use the command `Corgea: Scan Uncommitted Changes` to scan the uncommitted changes in your code.
+5. **Scan All Files**: Use the command `Corgea: Scan All Files` to scan all the files in your project.
 
 
 ---

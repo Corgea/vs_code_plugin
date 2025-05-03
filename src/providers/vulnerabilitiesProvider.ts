@@ -6,7 +6,8 @@ import { OnCommand } from "../utils/commandsManager";
 import { OnEvent } from "../utils/eventsManager";
 
 export default class VulnerabilitiesProvider
-  implements vscode.TreeDataProvider<TreeItem> {
+  implements vscode.TreeDataProvider<TreeItem>
+{
   public static readonly viewName = "vulnerabilitiesView";
 
   private static _onDidChangeTreeData: vscode.EventEmitter<
@@ -73,17 +74,14 @@ export default class VulnerabilitiesProvider
         potentialNames,
       ).catch(async (error) => {
         if (error.status == 401) {
-          await StorageManager.setValue<boolean>(
-            StorageKeys.isLoggedIn,
-            false
-          );
+          await StorageManager.setValue<boolean>(StorageKeys.isLoggedIn, false);
         }
         return {
           status: error.status,
           data: {
-            status: "no_project_found"
+            status: "no_project_found",
           },
-          issues: []
+          issues: [],
         } as any;
       });
       if (!response) {

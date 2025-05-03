@@ -41,6 +41,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.window.registerUriHandler({
       handleUri(uri: vscode.Uri) {
+        console.log("URI Handler called with:", uri.toString());
         EventsManager.emit("navigate", uri);
       },
     }),

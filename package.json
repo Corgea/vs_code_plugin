@@ -12,17 +12,14 @@
     "Other"
   ],
   "activationEvents": [
+    "onStartupFinished",
     "onUri"
   ],
   "main": "./out/extension.js",
   "contributes": {
-    "uriHandler": [
-      {
-        "scheme": "vscode",
-        "authority": "extension",
-        "path": "/Corgea.corgea/issue/*"
-      }
-    ],
+    "uriHandler": {
+      "uriHandler": true
+    },
     "commands": [
       {
         "command": "corgea.setApiKey",
@@ -107,6 +104,7 @@
     "pug": "^3.0.3",
     "react": "^18.2.0",
     "simple-git": "^3.27.0",
+    "tar": "^7.4.3",
     "vsce": "^2.15.0"
   }
 }

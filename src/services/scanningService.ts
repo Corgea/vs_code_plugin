@@ -55,27 +55,20 @@ export default class scanningService {
       vscode.window.showErrorMessage("Corgea URL or API Key not set.");
       return;
     }
-
     // Execute corgea scan with environment variables
     const command = `${corgeaPath?.fsPath} scan`;
+    const shell = vscode.env.shell;
     let envCommand = "";
-    if (scanningService.getPlatform() === "windows") {
-      envCommand = `set CORGEA_URL="${corgeaUrl}"`;
+
+    if (shell.includes("powershell")) {
+      envCommand = `$env:CORGEA_URL='${corgeaUrl}'; $env:CORGEA_TOKEN='${corgeaToken}'; cls;`;
+    } else if (shell.includes("cmd.exe")) {
+      envCommand = `set CORGEA_URL="${corgeaUrl}" && set CORGEA_TOKEN="${corgeaToken}" && cls;`;
     } else {
-      envCommand = `export CORGEA_URL="${corgeaUrl}"`;
-    }
-    TerminalManager.executeCommand(envCommand);
-    TerminalManager.executeCommand(
-      `${corgeaPath?.fsPath} login ${corgeaToken}`,
-    );
-    // Clear the terminal before executing the scan command
-    if (scanningService.getPlatform() === "windows") {
-      TerminalManager.executeCommand("cls");
-    } else {
-      TerminalManager.executeCommand("clear");
+      envCommand = `export CORGEA_URL="${corgeaUrl}" && export CORGEA_TOKEN="${corgeaToken}" && clear;`;
     }
     TerminalManager.executeCommand(
-      `${corgeaPath?.fsPath} scan ${isFullScan ? "" : "--only-uncommitted"}`,
+      `${envCommand} ${command} ${isFullScan ? "" : "--only-uncommitted"}`,
     );
   }
 

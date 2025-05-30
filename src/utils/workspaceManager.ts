@@ -16,6 +16,7 @@ export default class WorkspaceManager {
   public static async getWorkspacePotentialNames(): Promise<string[]> {
     let workspacePath: any = this.getWorkspaceFolderURI();
     workspacePath = workspacePath ? workspacePath.fsPath : undefined;
+    if (!workspacePath) return [];
     const remotes = (await GitManager.getRemoteUrls(workspacePath)).map(
       (item) => {
         const repoName = item.split("/").pop()?.replace(".git", "");
@@ -41,8 +42,8 @@ export default class WorkspaceManager {
     const normalizedPath1 = path.normalize(path1);
     const normalizedPath2 = path.normalize(path2);
     // Remove leading backslashes if present for windows
-    const cleanPath1 = normalizedPath1.replace(/^\\+/, '');
-    const cleanPath2 = normalizedPath2.replace(/^\\+/, '');
+    const cleanPath1 = normalizedPath1.replace(/^\\+/, "");
+    const cleanPath2 = normalizedPath2.replace(/^\\+/, "");
     return cleanPath1 === cleanPath2;
   }
 }

@@ -5,10 +5,12 @@ import ContextManager from "../utils/contextManager";
 import * as os from "os";
 import * as path from "path";
 import { execSync } from "child_process";
-import StorageManager, { StorageKeys, StorageSecretKeys } from "../utils/storageManager";
+import StorageManager, {
+  StorageKeys,
+  StorageSecretKeys,
+} from "../utils/storageManager";
 
 export default class scanningService {
-  
   @OnCommand("corgea.scan-uncommitted")
   public static async scanUncommittedFiles() {
     await scanningService.scanProject(false);
@@ -22,7 +24,10 @@ export default class scanningService {
   @OnCommand("corgea.scan-full")
   public static async scanProject(isFullScan: boolean = true) {
     const contextUri = ContextManager.getContext().extensionUri;
-    const myVenvPath = vscode.Uri.joinPath(contextUri, "./assets/runtimes/python/myvenv");
+    const myVenvPath = vscode.Uri.joinPath(
+      contextUri,
+      "./assets/runtimes/python/myvenv",
+    );
 
     // Ensure the virtual environment is set up
     await scanningService.ensureVirtualEnvExists(contextUri, myVenvPath);
@@ -35,59 +40,74 @@ export default class scanningService {
     }
 
     // Check if corgea is installed
-    if (!scanningService.isCorgeaInstalled(pythonPath.fsPath)) {
+    if (!scanningService.isCorgeaInstalled()) {
       vscode.window.showInformationMessage("Installing Corgea cli...");
       scanningService.installCorgea(pythonPath.fsPath);
     }
 
     // Set environment variables for Corgea CLI
     const corgeaUrl = await StorageManager.getValue(StorageKeys.corgeaUrl);
-    const corgeaToken = await StorageManager.getSecretValue(StorageSecretKeys.corgeaApiKey);
+    const corgeaToken = await StorageManager.getSecretValue(
+      StorageSecretKeys.corgeaApiKey,
+    );
 
     if (!corgeaUrl || !corgeaToken) {
       vscode.window.showErrorMessage("Corgea URL or API Key not set.");
       return;
     }
-
     // Execute corgea scan with environment variables
     const command = `${corgeaPath?.fsPath} scan`;
+    const shell = vscode.env.shell;
     let envCommand = "";
-    if (os.platform() === "win32") {
-      envCommand = `set CORGEA_URL="${corgeaUrl}"`;
+
+    if (shell.includes("powershell")) {
+      envCommand = `$env:CORGEA_URL='${corgeaUrl}'; $env:CORGEA_TOKEN='${corgeaToken}'; cls;`;
+    } else if (shell.includes("cmd.exe")) {
+      envCommand = `set CORGEA_URL="${corgeaUrl}" && set CORGEA_TOKEN="${corgeaToken}" && cls;`;
     } else {
-      envCommand = `export CORGEA_URL="${corgeaUrl}"`;
+      envCommand = `export CORGEA_URL="${corgeaUrl}" && export CORGEA_TOKEN="${corgeaToken}" && clear;`;
     }
-    TerminalManager.executeCommand(envCommand);
-    TerminalManager.executeCommand(`${corgeaPath?.fsPath} login ${corgeaToken}`);
-    // Clear the terminal before executing the scan command
-    if (os.platform() === "win32") {
-      TerminalManager.executeCommand("cls");
-    } else {
-      TerminalManager.executeCommand("clear");
-    }
-    TerminalManager.executeCommand(`${corgeaPath?.fsPath} scan ${isFullScan ? "" : "--only-uncommitted"}`);
+    TerminalManager.executeCommand(
+      `${envCommand} ${command} ${isFullScan ? "" : "--only-uncommitted"}`,
+    );
   }
 
-  private static async ensureVirtualEnvExists(contextUri: vscode.Uri, myVenvPath: vscode.Uri) {
+  private static async ensureVirtualEnvExists(
+    contextUri: vscode.Uri,
+    myVenvPath: vscode.Uri,
+  ) {
     try {
-      await vscode.workspace.fs.stat(myVenvPath);
+      await vscode.workspace.fs.stat(
+        vscode.Uri.joinPath(myVenvPath, `./python`),
+      );
     } catch (error) {
-      const platform = os.platform();
-      let zipFileName = "";
-      if (platform === "win32") {
-        zipFileName = "myenv.windows.zip";
-      } else if (platform === "darwin") {
-        zipFileName = "myenv.mac.zip";
-      } else if (platform === "linux") {
-        zipFileName = "myenv.linux.zip";
+      let tarFileName = "";
+      if (scanningService.getPlatform() === "windows") {
+        tarFileName = "windows.gz";
+      } else if (scanningService.getPlatform() === "mac") {
+        tarFileName = "mac.gz";
+      } else if (scanningService.getPlatform() === "mac-intel") {
+        tarFileName = "mac-intel.gz";
+      } else if (scanningService.getPlatform() === "linux") {
+        tarFileName = "linux.gz";
       }
 
-      const zipFilePath = vscode.Uri.joinPath(contextUri, `./assets/runtimes/python/${zipFileName}`);
+      const tarFilePath = vscode.Uri.joinPath(
+        contextUri,
+        `./assets/runtimes/python/${tarFileName}`,
+      );
+      // create the directory if it doesn't exist
+      await vscode.workspace.fs.createDirectory(myVenvPath);
       try {
-        const extract = require('extract-zip');
-        await extract(zipFilePath.fsPath, { dir: myVenvPath.fsPath });
+        const tar = require("tar");
+        await tar.x({
+          file: tarFilePath.fsPath,
+          C: myVenvPath.fsPath,
+        });
       } catch (extractionError: any) {
-        vscode.window.showErrorMessage(`Failed to setup virtual environment. Please try again.`);
+        vscode.window.showErrorMessage(
+          `Failed to setup virtual environment. Please try again.`,
+        );
         throw extractionError;
       }
     }
@@ -97,13 +117,22 @@ export default class scanningService {
     const contextUri = ContextManager.getContext().extensionUri;
 
     if (os.platform() === "win32") {
-      return vscode.Uri.joinPath(contextUri, "./assets/runtimes/python/myvenv/Scripts/python.exe");
+      return vscode.Uri.joinPath(
+        contextUri,
+        "./assets/runtimes/python/myvenv/python/python.exe",
+      );
     } else if (os.platform() === "darwin") {
-      return vscode.Uri.joinPath(contextUri, "./assets/runtimes/python/myvenv/bin/python3");
+      return vscode.Uri.joinPath(
+        contextUri,
+        "./assets/runtimes/python/myvenv/python/bin/python",
+      );
     } else if (os.platform() === "linux") {
-      return vscode.Uri.joinPath(contextUri, "./assets/runtimes/python/myvenv/bin/python3");
+      return vscode.Uri.joinPath(
+        contextUri,
+        "./assets/runtimes/python/myvenv/python/bin/python",
+      );
     }
-    
+
     return null;
   }
 
@@ -112,7 +141,7 @@ export default class scanningService {
     if (pythonPath) {
       let corgeaPath = path.dirname(pythonPath.fsPath);
       if (os.platform() === "win32") {
-        corgeaPath = path.join(corgeaPath, "./corgea.exe");
+        corgeaPath = path.join(corgeaPath, "./Scripts/corgea.exe");
       } else {
         corgeaPath = path.join(corgeaPath, "./corgea");
       }
@@ -121,9 +150,11 @@ export default class scanningService {
     return null;
   }
 
-  private static isCorgeaInstalled(pythonPath: string): boolean {
+  private static isCorgeaInstalled(): boolean {
     try {
-      execSync(`${pythonPath} -m corgea --help`, { stdio: "ignore" });
+      execSync(`${scanningService.getCorgeaPath()} --help`, {
+        stdio: "ignore",
+      });
       return true;
     } catch (error) {
       return false;
@@ -133,10 +164,27 @@ export default class scanningService {
   private static installCorgea(pythonPath: string): void {
     try {
       execSync(`${pythonPath} -m pip install corgea-cli`, { stdio: "inherit" });
-      vscode.window.showInformationMessage("Corgea cli installed successfully!");
+      vscode.window.showInformationMessage(
+        "Corgea cli installed successfully!",
+      );
     } catch (error) {
       vscode.window.showErrorMessage("Failed to install Corgea cli.");
     }
+  }
+
+  private static getPlatform(): string {
+    if (os.platform() === "win32") {
+      return "windows";
+    } else if (os.platform() === "darwin") {
+      if (process.arch === "arm64") {
+        return "mac";
+      } else {
+        return "mac-intel";
+      }
+    } else if (os.platform() === "linux") {
+      return "linux";
+    }
+    return "";
   }
 
   public static activate() {}

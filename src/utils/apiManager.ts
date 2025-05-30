@@ -53,36 +53,52 @@ export default class APIManager {
   }
 
   private static checkForWarnings(headers: any, status: number): void {
-    if (headers['warning']) {
-      const warnings = headers['warning'].split(',');
+    if (headers["warning"]) {
+      const warnings = headers["warning"].split(",");
       warnings.forEach((warning: string) => {
-        const code = warning.trim().split(' ')[0];
-        if (code === '299') {
-          vscode.window.showWarningMessage("This version of the Corgea plugin is deprecated. Please upgrade to the latest version to ensure continued support and better performance.");
+        const code = warning.trim().split(" ")[0];
+        if (code === "299") {
+          vscode.window.showWarningMessage(
+            "This version of the Corgea plugin is deprecated. Please upgrade to the latest version to ensure continued support and better performance.",
+          );
         }
       });
     }
     if (status === 410) {
-      vscode.window.showErrorMessage("Support for this extension version has dropped. Please upgrade Corgea extension immediately to continue using it.");
+      vscode.window.showErrorMessage(
+        "Support for this extension version has dropped. Please upgrade Corgea extension immediately to continue using it.",
+      );
     }
   }
 
-  private static async getBaseClient(showError: boolean = true): Promise<AxiosInstance> {
-    const apiKey = await this.getApiKey();
+  private static async getBaseClient(
+    showError: boolean = true,
+    throwOnMissingToken: boolean = true,
+  ): Promise<AxiosInstance> {
+    let apiKey;
+    try {
+      apiKey = await this.getApiKey();
+    } catch (error) {
+      if (throwOnMissingToken) {
+        throw error;
+      }
+    }
     const client = axios.create({
-      headers: { "CORGEA-TOKEN": apiKey },
+      headers: apiKey ? { "CORGEA-TOKEN": apiKey } : undefined,
     });
 
     client.interceptors.response.use(
-      response => response,
-      error => {
+      (response) => response,
+      (error) => {
         if (error.response && error.response.status === 401) {
           if (showError) {
-            vscode.window.showErrorMessage("Token is expired or invalid. Please update it.");
+            vscode.window.showErrorMessage(
+              "Token is expired or invalid. Please update it.",
+            );
           }
         }
         return Promise.reject(error);
-      }
+      },
     );
 
     return client;
@@ -95,12 +111,11 @@ export default class APIManager {
       "Verifying API Key",
     );
     try {
-      const client = await this.getBaseClient(false);
+      const client = await this.getBaseClient(false, false);
       const url = `${corgeaUrl}/api/${this.apiVersion}/verify/${apiKey}`;
       const response = await client.get(url, {
         params: { url: corgeaUrl },
       });
-      this.checkForWarnings(response.headers, response.status);
       if (response.data.status === "ok") return true;
       return false;
     } catch (error) {
@@ -149,11 +164,14 @@ export default class APIManager {
       const client = await this.getBaseClient();
       let response: any;
       for (const path of workspacePath) {
-        response = await client.get(`${corgeaUrl}/api/${this.apiVersion}/issues`, {
-          params: {
-            project: path,
+        response = await client.get(
+          `${corgeaUrl}/api/${this.apiVersion}/issues`,
+          {
+            params: {
+              project: path,
+            },
           },
-        });
+        );
         this.checkForWarnings(response.headers, response.status);
         if (response.data.status === "no_project_found") {
           continue;

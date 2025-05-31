@@ -4,6 +4,7 @@ import * as vscode from "vscode";
 
 export enum Views {
   VulnerabilityDetails = "vulnerabilityDetails.pug",
+  SCAVulnerabilityDetails = "scaVulnerabilityDetails.pug",
   GenericError = "genericError.pug",
 }
 

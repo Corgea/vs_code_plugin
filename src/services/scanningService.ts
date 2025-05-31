@@ -58,14 +58,13 @@ export default class scanningService {
     // Execute corgea scan with environment variables
     const command = `${corgeaPath?.fsPath} scan`;
     const shell = vscode.env.shell;
-    let envCommand = "";
-
+    let envCommand = `${corgeaPath?.fsPath} login --url ${corgeaUrl} ${corgeaToken}`;
     if (shell.includes("powershell")) {
-      envCommand = `$env:CORGEA_URL='${corgeaUrl}'; $env:CORGEA_TOKEN='${corgeaToken}'; cls;`;
+      envCommand = `${envCommand} ; `;
     } else if (shell.includes("cmd.exe")) {
-      envCommand = `set CORGEA_URL="${corgeaUrl}" && set CORGEA_TOKEN="${corgeaToken}" && cls;`;
+      envCommand = `${envCommand} &&`;
     } else {
-      envCommand = `export CORGEA_URL="${corgeaUrl}" && export CORGEA_TOKEN="${corgeaToken}" && clear;`;
+      envCommand = `${envCommand} &&`;
     }
     TerminalManager.executeCommand(
       `${envCommand} ${command} ${isFullScan ? "" : "--only-uncommitted"}`,
@@ -163,7 +162,9 @@ export default class scanningService {
 
   private static installCorgea(pythonPath: string): void {
     try {
-      execSync(`${pythonPath} -m pip install corgea-cli`, { stdio: "inherit" });
+      execSync(`${pythonPath} -m pip install -U corgea-cli`, {
+        stdio: "inherit",
+      });
       vscode.window.showInformationMessage(
         "Corgea cli installed successfully!",
       );

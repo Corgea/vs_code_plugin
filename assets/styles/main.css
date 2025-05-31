@@ -81,16 +81,29 @@ button {
   border-radius: 5px;
 }
 
-.HI {
+.UNSPECIFIED {
+  background: #373737;
+  color: #fff;
+}
+
+.CRITICAL {
   background: #c30000;
   color: #fff;
 }
-.ME {
+
+.HI,
+.HIGH {
+  background: #c30000;
+  color: #fff;
+}
+.ME,
+.MEDIUM {
   background: #d47500;
   color: #fff;
 }
 
-.LO {
+.LO,
+.LOW {
   background: #fff700;
   color: #333;
 }

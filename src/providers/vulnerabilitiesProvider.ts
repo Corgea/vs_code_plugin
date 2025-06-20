@@ -5,6 +5,12 @@ import StorageManager, { StorageKeys } from "../utils/storageManager";
 import { OnCommand } from "../utils/commandsManager";
 import { OnEvent } from "../utils/eventsManager";
 
+interface CacheEntry {
+  data: TreeItem[];
+  timestamp: number;
+  workspaceNames: string[];
+}
+
 export default class VulnerabilitiesProvider
   implements vscode.TreeDataProvider<TreeItem>
 {
@@ -16,6 +22,9 @@ export default class VulnerabilitiesProvider
   static readonly onDidChangeTreeData: vscode.Event<TreeItem | undefined> =
     this._onDidChangeTreeData.event;
 
+  // Add static promise to prevent concurrent API calls
+  private static currentRequest: Promise<TreeItem[]> | null = null;
+
   public get _onDidChangeTreeData(): vscode.EventEmitter<TreeItem | undefined> {
     return VulnerabilitiesProvider._onDidChangeTreeData;
   }
@@ -25,11 +34,13 @@ export default class VulnerabilitiesProvider
   }
 
   @OnCommand("vulnerabilities.refreshEntry")
-  @OnEvent("workspace.document_opened")
-  @OnEvent("workspace.document_saved")
   @OnEvent("internal.login")
-  @OnEvent("internal.lgout")
+  @OnEvent("internal.logout")
+  @OnCommand("corgea.refreshVulnerabilities")
   refresh(): void {
+    // Clear the current request when refreshing to force a new fetch
+    APIManager.clearAllCaches();
+    VulnerabilitiesProvider.currentRequest = null;
     VulnerabilitiesProvider._onDidChangeTreeData.fire(undefined);
   }
 
@@ -39,151 +50,189 @@ export default class VulnerabilitiesProvider
 
   async getChildren(element?: TreeItem): Promise<TreeItem[]> {
     if (!element) {
-      const authenticated = await StorageManager.getValue<boolean>(
-        StorageKeys.isLoggedIn,
+      // If there's already a request in progress, return it
+      if (VulnerabilitiesProvider.currentRequest) {
+        return VulnerabilitiesProvider.currentRequest;
+      }
+
+      // Create a new request and store it
+      VulnerabilitiesProvider.currentRequest = this.fetchRootChildren();
+      
+      try {
+        const result = await VulnerabilitiesProvider.currentRequest;
+        return result;
+      } finally {
+        // Clear the request when it completes (success or error)
+        VulnerabilitiesProvider.currentRequest = null;
+      }
+    } else if (
+      element instanceof FileItem ||
+      element instanceof VulnerabilityListSection
+    ) {
+      return element.children;
+    } else {
+      return [
+        new TreeItem(
+          "This projects doesn't have fixes in Corgea.",
+          vscode.TreeItemCollapsibleState.None,
+        ),
+      ];
+    }
+  }
+
+  private async fetchRootChildren(): Promise<TreeItem[]> {
+    const authenticated = await StorageManager.getValue<boolean>(
+      StorageKeys.isLoggedIn,
+    );
+    if (!authenticated) {
+      const helpMessage = new TreeItem(
+        "Seems like you are not logged in.",
+        vscode.TreeItemCollapsibleState.None,
       );
-      if (!authenticated) {
-        const helpMessage = new TreeItem(
-          "Seems like you are not logged in.",
+      const loginItem = new vscode.TreeItem(
+        "Click Here to login",
+        vscode.TreeItemCollapsibleState.None,
+      );
+
+      loginItem.command = {
+        command: "corgea.setApiKey",
+        title: "Login",
+      };
+
+      loginItem.iconPath = new vscode.ThemeIcon("key");
+      return [helpMessage, loginItem as TreeItem];
+    }
+
+    const potentialNames = await WorkspacManager.getWorkspacePotentialNames();
+    if (!potentialNames || potentialNames.length === 0) {
+      return [
+        new TreeItem(
+          "This projects doesn't have fixes in Corgea.",
           vscode.TreeItemCollapsibleState.None,
-        );
-        const loginItem = new vscode.TreeItem(
-          "Click Here to login",
-          vscode.TreeItemCollapsibleState.None,
-        );
+        ),
+      ];
+    }
 
-        loginItem.command = {
-          command: "corgea.setApiKey",
-          title: "Login",
-        };
-
-        loginItem.iconPath = new vscode.ThemeIcon("key");
-        return [helpMessage, loginItem as TreeItem];
+    // Fetch fresh data
+    const response = await APIManager.getProjectVulnerabilities(
+      potentialNames,
+    ).catch(async (error: any) => {
+      if (error.status == 401) {
+        await StorageManager.setValue<boolean>(StorageKeys.isLoggedIn, false);
       }
+      return {
+        status: error.status,
+        data: {
+          status: "no_project_found",
+        },
+        issues: [],
+      } as any;
+    });
 
-      const potentialNames = await WorkspacManager.getWorkspacePotentialNames();
-      if (!potentialNames || potentialNames.length === 0) {
-        return [
-          new TreeItem(
-            "This projects doesn't have fixes in Corgea.",
-            vscode.TreeItemCollapsibleState.None,
-          ),
-        ];
-      }
-      const response = await APIManager.getProjectVulnerabilities(
-        potentialNames,
-      ).catch(async (error) => {
-        if (error.status == 401) {
-          await StorageManager.setValue<boolean>(StorageKeys.isLoggedIn, false);
-        }
-        return {
-          status: error.status,
-          data: {
-            status: "no_project_found",
-          },
+    const scaResponse = await APIManager.getProjectSCAVulnerabilities(
+      potentialNames,
+    ).catch(async (error: any) => {
+      return {
+        status: error.status,
+        data: {
+          status: "no_project_found",
           issues: [],
-        } as any;
-      });
+        },
+      } as any;
+    });
 
-      const scaResponse = await APIManager.getProjectSCAVulnerabilities(
-        potentialNames,
-      ).catch(async (error) => {
-        return {
-          status: error.status,
-          data: {
-            status: "no_project_found",
-            issues: [],
-          },
-        } as any;
-      });
-
-      if (!response) {
-        return [];
-      }
-      if (response.status >= 400 && response.status < 500) {
-        vscode.window.showInformationMessage(
-          "Corgea: No issues found. Please check your API key and try again.",
-        );
-        return [];
-      }
-
-      if (response.data.status === "no_project_found") {
-        return [
-          new TreeItem(
-            "This projects doesn't have fixes in Corgea.",
-            vscode.TreeItemCollapsibleState.None,
-          ),
-        ];
-      }
-      let hasSCAVulnerabilities = false;
-      if (scaResponse.data.issues && scaResponse.data.issues.length > 0) {
-        hasSCAVulnerabilities = true;
-      }
-
-      const files = new Map<string, VulnerabilityItem[]>();
-      if (response.data.issues.length === 0 && !hasSCAVulnerabilities) {
-        return [
-          new TreeItem(
-            "Project doesnt't have any issue",
-            vscode.TreeItemCollapsibleState.None,
-          ),
-        ];
-      }
-
-      response.data.issues.forEach((v: any) => {
-        const filePath = v.location.file.path;
-        if (!files.has(filePath)) {
-          files.set(filePath, []);
-        }
-
-        let label = v.status; // Default label is empty
-        const vulnerabilityLabel = v.classification?.name;
-        const vulnerabilityItemLabel = `${v.urgency}${label ? " - " : ""}${label} - ${vulnerabilityLabel}: ${v.location.line_number}`;
-        let file = files.get(filePath);
-
-        if (file) {
-          file.push(
-            new VulnerabilityItem(
-              vulnerabilityItemLabel,
-              vscode.TreeItemCollapsibleState.None,
-              {
-                command: "vulnerabilities.showDetails",
-                title: "Show Vulnerability Details",
-                arguments: [v],
-              },
-            ),
-          );
-        } else {
-          console.error("File not found");
-          //show error message
-          vscode.window.showInformationMessage(
-            "Corgea: File not found. Please check if the file exists.",
-          );
-        }
-      });
-
-      // Sort vulnerabilities by line number ascending
-      Array.from(files.keys())
-        .sort()
-        .forEach((filePath) => {
-          const vulnerabilities = files.get(filePath);
-          if (!vulnerabilities) {
-            vscode.window.showInformationMessage(
-              "Corgea: No vulnerabilities found.",
-            );
-            return;
-          }
-          vulnerabilities.sort((a, b) => {
-            const lineNumA = parseInt(a.label.split(":")[1].trim());
-            const lineNumB = parseInt(b.label.split(":")[1].trim());
-            return lineNumA - lineNumB;
-          });
-        });
-      const vulnerabilitiesList = Array.from(files.keys()).map(
-        (filePath) => new FileItem(filePath, files.get(filePath) || []),
+    if (!response) {
+      return [];
+    }
+    if (response.status >= 400 && response.status < 500) {
+      vscode.window.showInformationMessage(
+        "Corgea: No issues found. Please check your API key and try again.",
       );
-      if (!hasSCAVulnerabilities) return vulnerabilitiesList;
+      return [];
+    }
 
+    if (response.data.status === "no_project_found") {
+      const result = [
+        new TreeItem(
+          "This projects doesn't have fixes in Corgea.",
+          vscode.TreeItemCollapsibleState.None,
+        ),
+      ];
+      return result;
+    }
+    let hasSCAVulnerabilities = false;
+    if (scaResponse.data.issues && scaResponse.data.issues.length > 0) {
+      hasSCAVulnerabilities = true;
+    }
+
+    const files = new Map<string, VulnerabilityItem[]>();
+    if (response.data.issues.length === 0 && !hasSCAVulnerabilities) {
+      const result = [
+        new TreeItem(
+          "Project doesnt't have any issue",
+          vscode.TreeItemCollapsibleState.None,
+        ),
+      ];
+      return result;
+    }
+
+    response.data.issues.forEach((v: any) => {
+      const filePath = v.location.file.path;
+      if (!files.has(filePath)) {
+        files.set(filePath, []);
+      }
+
+      let label = v.status; // Default label is empty
+      const vulnerabilityLabel = v.classification?.name;
+      const vulnerabilityItemLabel = `${v.urgency}${label ? " - " : ""}${label} - ${vulnerabilityLabel}: ${v.location.line_number}`;
+      let file = files.get(filePath);
+
+      if (file) {
+        file.push(
+          new VulnerabilityItem(
+            vulnerabilityItemLabel,
+            vscode.TreeItemCollapsibleState.None,
+            {
+              command: "vulnerabilities.showDetails",
+              title: "Show Vulnerability Details",
+              arguments: [v],
+            },
+          ),
+        );
+      } else {
+        console.error("File not found");
+        //show error message
+        vscode.window.showInformationMessage(
+          "Corgea: File not found. Please check if the file exists.",
+        );
+      }
+    });
+
+    // Sort vulnerabilities by line number ascending
+    Array.from(files.keys())
+      .sort()
+      .forEach((filePath) => {
+        const vulnerabilities = files.get(filePath);
+        if (!vulnerabilities) {
+          vscode.window.showInformationMessage(
+            "Corgea: No vulnerabilities found.",
+          );
+          return;
+        }
+        vulnerabilities.sort((a, b) => {
+          const lineNumA = parseInt(a.label.split(":")[1].trim());
+          const lineNumB = parseInt(b.label.split(":")[1].trim());
+          return lineNumA - lineNumB;
+        });
+      });
+    const vulnerabilitiesList = Array.from(files.keys()).map(
+      (filePath) => new FileItem(filePath, files.get(filePath) || []),
+    );
+    
+    let result: TreeItem[];
+    if (!hasSCAVulnerabilities) {
+      result = vulnerabilitiesList;
+    } else {
       const scaPackages = new Map<string, VulnerabilityItem[]>();
       scaResponse.data.issues?.forEach((v: any) => {
         const key = `${v.package.name}`;
@@ -209,7 +258,7 @@ export default class VulnerabilitiesProvider
             scaPackages.get(packageName) || [],
           ),
       );
-      return [
+      result = [
         new VulnerabilityListSection(
           `Code Vulnerabilities (${response.data.issues.length})`,
           vulnerabilitiesList,
@@ -219,23 +268,15 @@ export default class VulnerabilitiesProvider
           scaPackagesList,
         ),
       ];
-    } else if (
-      element instanceof FileItem ||
-      element instanceof VulnerabilityListSection
-    ) {
-      return element.children;
-    } else {
-      return [
-        new TreeItem(
-          "This projects doesn't have fixes in Corgea.",
-          vscode.TreeItemCollapsibleState.None,
-        ),
-      ];
     }
+
+    return result;
   }
 
   @OnEvent("internal.logout")
   clearData(): void {
+    // Clear the current request when logging out
+    VulnerabilitiesProvider.currentRequest = null;
     VulnerabilitiesProvider._onDidChangeTreeData.fire(undefined);
   }
 }

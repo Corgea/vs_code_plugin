@@ -4,6 +4,7 @@ export enum StorageKeys {
   isLoggedIn = "isLoggedIn",
   corgeaUrl = "corgeaUrl",
   highlightingEnabled = "highlightingEnabled",
+  debugModeEnabled = "debugModeEnabled",
 }
 
 export enum StorageSecretKeys {

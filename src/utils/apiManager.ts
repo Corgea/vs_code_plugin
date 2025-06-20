@@ -7,6 +7,63 @@ import Vulnerability from "../types/vulnerability";
 import VulnerabilityDetails from "../types/vulnerabilityDetails";
 import * as vscode from "vscode";
 import SCAVulnerability from "../types/scaVulnerability";
+import DebugManager from "./debugManager";
+
+const cacheMap = new Map<string, {data: any, timestamp: number}>();
+const pendingRequests = new Map<string, Promise<any>>();
+
+function cache(ttlSeconds: number = 10) {
+  
+  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    const originalMethod = descriptor.value;
+
+    const cachedMethod = async function (...args: any[]) {
+      const cacheKey = `${propertyKey}-${JSON.stringify(args)}`;
+      const now = Date.now();
+      const cached = cacheMap.get(cacheKey);
+
+      // Check if we have a valid cached result
+      if (cached && (now - cached.timestamp) < ttlSeconds * 1000) {
+        return cached.data;
+      }
+
+      // Check if there's already a pending request with the same parameters
+      const pendingRequest = pendingRequests.get(cacheKey);
+      if (pendingRequest) {
+        return await pendingRequest;
+      }
+
+      // Create a new promise for this request
+      const requestPromise = (async () => {
+        try {
+          // Call original method and cache result
+          const result = await originalMethod.apply(target, args);
+          cacheMap.set(cacheKey, {
+            data: result,
+            timestamp: now
+          });
+          return result;
+        } finally {
+          // Clean up the pending request
+          pendingRequests.delete(cacheKey);
+        }
+      })();
+
+      // Store the pending request
+      pendingRequests.set(cacheKey, requestPromise);
+      
+      return await requestPromise;
+    };
+    
+    cachedMethod.withoutCache = async function (...args: any[]) {
+      return await originalMethod.apply(this, args);
+    };
+    
+    descriptor.value = cachedMethod;
+    return descriptor;
+  };
+}
+
 export default class APIManager {
   private static statusBarItem: vscode.StatusBarItem | undefined;
   private static isStatusBarVisible: boolean = false;
@@ -24,6 +81,11 @@ export default class APIManager {
     );
     if (!apiKey) throw new Error("API Key not set");
     return apiKey;
+  }
+
+  public static clearAllCaches(): void {
+    cacheMap.clear();
+    pendingRequests.clear();
   }
 
   private static showLoadingStatus(
@@ -87,15 +149,39 @@ export default class APIManager {
       headers: apiKey ? { "CORGEA-TOKEN": apiKey } : undefined,
     });
 
-    client.interceptors.response.use(
-      (response) => response,
+    // Request interceptor
+    client.interceptors.request.use(
+      async (config) => {
+        await DebugManager.log(`Request: ${config.method?.toUpperCase()} ${config.url}`);
+        await DebugManager.log(`Request Headers: ${JSON.stringify(config.headers)}`);
+        return config;
+      },
       (error) => {
-        if (error.response && error.response.status === 401) {
-          if (showError) {
+        return Promise.reject(error);
+      }
+    );
+
+    // Response interceptor
+    client.interceptors.response.use(
+      async (response) => {
+        await DebugManager.log(`Response Status: ${response.status}`);
+        await DebugManager.log(`Response Headers: ${JSON.stringify(response.headers)}`);
+        await DebugManager.log(`Response Data: ${JSON.stringify(response.data)}`);
+        return response;
+      },
+      async (error) => {
+        if (error.response) {
+          await DebugManager.log(`Error Status: ${error.response.status}`);
+          await DebugManager.log(`Error Headers: ${JSON.stringify(error.response.headers)}`);
+          await DebugManager.log(`Error Data: ${JSON.stringify(error.response.data)}`);
+          
+          if (error.response.status === 401 && showError) {
             vscode.window.showErrorMessage(
               "Token is expired or invalid. Please update it.",
             );
           }
+        } else {
+          await DebugManager.log(`Request Error: ${error.message}`);
         }
         return Promise.reject(error);
       },
@@ -104,6 +190,7 @@ export default class APIManager {
     return client;
   }
 
+  @cache()
   public static async verifyToken(apiKey: string): Promise<boolean> {
     const corgeaUrl = await APIManager.getBaseUrl();
     APIManager.showLoadingStatus(
@@ -126,6 +213,7 @@ export default class APIManager {
     }
   }
 
+  @cache(60)
   public static async getVulnerabilityDetails(
     vulnerabilityId: string,
   ): Promise<VulnerabilityDetails> {
@@ -148,6 +236,7 @@ export default class APIManager {
     }
   }
 
+  @cache(60 * 10)
   public static async getProjectVulnerabilities(
     workspacePath: string | string[],
   ): Promise<
@@ -163,23 +252,63 @@ export default class APIManager {
     try {
       const client = await this.getBaseClient();
       let response: any;
+      
       for (const path of workspacePath) {
-        response = await client.get(
-          `${corgeaUrl}/api/${this.apiVersion}/issues`,
-          {
-            params: {
-              project: path,
+        // Fetch all pages recursively
+        const allIssues: Vulnerability[] = [];
+        let currentPage = 1;
+        let totalPages = 1;
+        
+        do {
+          response = await client.get(
+            `${corgeaUrl}/api/${this.apiVersion}/issues`,
+            {
+              params: {
+                project: path,
+                page: currentPage,
+                page_size: 50, // Maximum page size as per API
+              },
             },
-          },
-        );
-        this.checkForWarnings(response.headers, response.status);
-        if (response.data.status === "no_project_found") {
-          continue;
-        } else {
-          break;
+          );
+          this.checkForWarnings(response.headers, response.status);
+          
+          if (response.data.status === "no_project_found") {
+            break;
+          }
+          
+          if (response.data.status === "ok" && response.data.issues) {
+            allIssues.push(...response.data.issues);
+            totalPages = response.data.total_pages;
+            currentPage++;
+          } else {
+            break;
+          }
+        } while (currentPage <= totalPages);
+        
+        // If we found issues, return the combined result
+        if (allIssues.length > 0) {
+          return {
+            ...response,
+            data: {
+              status: "ok",
+              page: 1,
+              total_pages: 1,
+              issues: allIssues,
+            },
+          };
         }
       }
-      return response;
+      
+      // If no issues found in any workspace path, return empty result
+      return {
+        ...response,
+        data: {
+          status: "ok",
+          page: 1,
+          total_pages: 1,
+          issues: [],
+        },
+      };
     } catch (error) {
       console.error(error);
       throw error;
@@ -188,6 +317,7 @@ export default class APIManager {
     }
   }
 
+  @cache(100)
   public static async getProjectSCAVulnerabilities(
     workspacePath: string | string[],
   ): Promise<
@@ -205,24 +335,69 @@ export default class APIManager {
     try {
       const client = await this.getBaseClient();
       let response: any;
+      
       for (const path of workspacePath) {
-        response = await client.get(
-          `${corgeaUrl}/api/${this.apiVersion}/issues/sca`,
-          {
-            params: {
+        // Fetch all pages recursively
+        const allIssues: SCAVulnerability[] = [];
+        let currentPage = 1;
+        let totalPages = 1;
+        let totalIssues = 0;
+        
+        do {
+          response = await client.get(
+            `${corgeaUrl}/api/${this.apiVersion}/issues/sca`,
+            {
+              params: {
+                project: path,
+                page: currentPage,
+                page_size: 50, // Maximum page size as per API
+              },
+            },
+          );
+          this.checkForWarnings(response.headers, response.status);
+          
+          if (response.data.status === "no_project_found") {
+            break;
+          }
+          
+          if (response.data.status === "ok" && response.data.issues) {
+            allIssues.push(...response.data.issues);
+            totalPages = response.data.total_pages;
+            totalIssues = response.data.total_issues;
+            currentPage++;
+          } else {
+            break;
+          }
+        } while (currentPage <= totalPages);
+        
+        // If we found issues, return the combined result
+        if (allIssues.length > 0) {
+          return {
+            ...response,
+            data: {
+              status: "ok",
+              page: 1,
+              total_pages: 1,
+              total_issues: totalIssues,
+              issues: allIssues,
               project: path,
             },
-          },
-        );
-        this.checkForWarnings(response.headers, response.status);
-        if (response.data.status === "no_project_found") {
-          continue;
-        } else {
-          response.data.project = path;
-          break;
+          };
         }
       }
-      return response;
+      
+      // If no issues found in any workspace path, return empty result
+      return {
+        ...response,
+        data: {
+          status: "ok",
+          page: 1,
+          total_pages: 1,
+          total_issues: 0,
+          issues: [],
+          project: "",
+        },
+      };
     } catch (error) {
       console.error(error);
       throw error;

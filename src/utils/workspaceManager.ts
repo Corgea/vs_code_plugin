@@ -4,13 +4,7 @@ import GitManager from "./gitManager";
 
 export default class WorkspaceManager {
   public static getWorkspaceFolderURI(): vscode.Uri | undefined {
-    if (
-      vscode.workspace.workspaceFolders &&
-      vscode.workspace.workspaceFolders.length > 0
-    ) {
-      return vscode.workspace.workspaceFolders[0].uri;
-    }
-    return undefined;
+    return this.getWorkspaceFolder()?.uri;
   }
 
   public static async getWorkspacePotentialNames(): Promise<string[]> {
@@ -45,5 +39,12 @@ export default class WorkspaceManager {
     const cleanPath1 = normalizedPath1.replace(/^\\+/, "");
     const cleanPath2 = normalizedPath2.replace(/^\\+/, "");
     return cleanPath1 === cleanPath2;
+  }
+
+  public static getWorkspaceFolder(): vscode.WorkspaceFolder | undefined {
+    if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
+      return vscode.workspace.workspaceFolders[0];
+    }
+    return undefined;
   }
 }

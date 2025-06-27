@@ -26,6 +26,13 @@ export default class AuthService {
       prompt: "Enter the Corgea URL or use the default URL provided",
       ignoreFocusOut: true,
     });
+    if (corgeaUrl && corgeaUrl.trim() === "corgea_debug") {
+      StorageManager.setValue(StorageKeys.debugModeEnabled, "true");
+      vscode.window.showInformationMessage(
+        "Debug mode enabled. Messages will be printed in the .vscode/corgea.extension.log file.",
+      );
+      return;
+    }
 
     if (corgeaUrl) {
       StorageManager.setValue(StorageKeys.corgeaUrl, corgeaUrl);

@@ -154,6 +154,8 @@ export default class APIManager {
       async (config) => {
         await DebugManager.log(`Request: ${config.method?.toUpperCase()} ${config.url}`);
         await DebugManager.log(`Request Headers: ${JSON.stringify(config.headers)}`);
+        await DebugManager.log(`Request Params: ${JSON.stringify(config.params)}`);
+        await DebugManager.log(`Request Data: ${JSON.stringify(config.data)}`);
         return config;
       },
       (error) => {

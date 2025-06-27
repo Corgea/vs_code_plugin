@@ -6,7 +6,8 @@ import { OnCommand } from "../utils/commandsManager";
 import { OnEvent } from "../utils/eventsManager";
 
 export default class VulnerabilitiesProvider
-  implements vscode.TreeDataProvider<TreeItem> {
+  implements vscode.TreeDataProvider<TreeItem>
+{
   public static readonly viewName = "vulnerabilitiesView";
 
   private static _onDidChangeTreeData: vscode.EventEmitter<
@@ -83,6 +84,19 @@ export default class VulnerabilitiesProvider
           issues: [],
         } as any;
       });
+
+      const scaResponse = await APIManager.getProjectSCAVulnerabilities(
+        potentialNames,
+      ).catch(async (error) => {
+        return {
+          status: error.status,
+          data: {
+            status: "no_project_found",
+            issues: [],
+          },
+        } as any;
+      });
+
       if (!response) {
         return [];
       }
@@ -101,9 +115,13 @@ export default class VulnerabilitiesProvider
           ),
         ];
       }
+      let hasSCAVulnerabilities = false;
+      if (scaResponse.data.issues && scaResponse.data.issues.length > 0) {
+        hasSCAVulnerabilities = true;
+      }
 
       const files = new Map<string, VulnerabilityItem[]>();
-      if (response.data.issues.length === 0) {
+      if (response.data.issues.length === 0 && !hasSCAVulnerabilities) {
         return [
           new TreeItem(
             "Project doesnt't have any issue",
@@ -111,6 +129,7 @@ export default class VulnerabilitiesProvider
           ),
         ];
       }
+
       response.data.issues.forEach((v: any) => {
         const filePath = v.location.file.path;
         if (!files.has(filePath)) {
@@ -160,11 +179,50 @@ export default class VulnerabilitiesProvider
             return lineNumA - lineNumB;
           });
         });
-
-      return Array.from(files.keys()).map(
+      const vulnerabilitiesList = Array.from(files.keys()).map(
         (filePath) => new FileItem(filePath, files.get(filePath) || []),
       );
-    } else if (element instanceof FileItem) {
+      if (!hasSCAVulnerabilities) return vulnerabilitiesList;
+
+      const scaPackages = new Map<string, VulnerabilityItem[]>();
+      scaResponse.data.issues?.forEach((v: any) => {
+        const key = `${v.package.name}`;
+        if (!scaPackages.has(key)) {
+          scaPackages.set(key, []);
+        }
+        scaPackages.get(key)?.push(
+          new VulnerabilityItem(
+            `${v.cve}: ${v.severity} Severity - Fixed in ${v.package.fix_version}`,
+            vscode.TreeItemCollapsibleState.None,
+            {
+              command: "vulnerabilities.showSCAVulnerabilityDetails",
+              title: "Show SCA Vulnerability Details",
+              arguments: [v, scaResponse.data.issues, scaResponse.data.project],
+            },
+          ),
+        );
+      });
+      const scaPackagesList = Array.from(scaPackages.keys()).map(
+        (packageName) =>
+          new VulnerabilityListSection(
+            packageName,
+            scaPackages.get(packageName) || [],
+          ),
+      );
+      return [
+        new VulnerabilityListSection(
+          `Code Vulnerabilities (${response.data.issues.length})`,
+          vulnerabilitiesList,
+        ),
+        new VulnerabilityListSection(
+          `SCA Vulnerabilities (${scaResponse.data.issues?.length || 0})`,
+          scaPackagesList,
+        ),
+      ];
+    } else if (
+      element instanceof FileItem ||
+      element instanceof VulnerabilityListSection
+    ) {
       return element.children;
     } else {
       return [
@@ -172,7 +230,7 @@ export default class VulnerabilitiesProvider
           "This projects doesn't have fixes in Corgea.",
           vscode.TreeItemCollapsibleState.None,
         ),
-      ]
+      ];
     }
   }
 
@@ -192,6 +250,18 @@ class TreeItem extends vscode.TreeItem {
 }
 
 class FileItem extends TreeItem {
+  children: VulnerabilityItem[];
+
+  constructor(
+    public readonly label: string,
+    children: VulnerabilityItem[],
+  ) {
+    super(label, vscode.TreeItemCollapsibleState.Collapsed);
+    this.children = children;
+  }
+}
+
+class VulnerabilityListSection extends TreeItem {
   children: VulnerabilityItem[];
 
   constructor(

@@ -6,7 +6,7 @@ import StorageManager, {
 import Vulnerability from "../types/vulnerability";
 import VulnerabilityDetails from "../types/vulnerabilityDetails";
 import * as vscode from "vscode";
-
+import SCAVulnerability from "../types/scaVulnerability";
 export default class APIManager {
   private static statusBarItem: vscode.StatusBarItem | undefined;
   private static isStatusBarVisible: boolean = false;
@@ -176,6 +176,49 @@ export default class APIManager {
         if (response.data.status === "no_project_found") {
           continue;
         } else {
+          break;
+        }
+      }
+      return response;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    } finally {
+      APIManager.hideLoadingStatus();
+    }
+  }
+
+  public static async getProjectSCAVulnerabilities(
+    workspacePath: string | string[],
+  ): Promise<
+    AxiosResponse<{
+      status: string;
+      page: number;
+      total_pages: number;
+      total_issues: number;
+      issues: SCAVulnerability[];
+      project: string;
+    }>
+  > {
+    const corgeaUrl = await APIManager.getBaseUrl();
+    APIManager.showLoadingStatus();
+    try {
+      const client = await this.getBaseClient();
+      let response: any;
+      for (const path of workspacePath) {
+        response = await client.get(
+          `${corgeaUrl}/api/${this.apiVersion}/issues/sca`,
+          {
+            params: {
+              project: path,
+            },
+          },
+        );
+        this.checkForWarnings(response.headers, response.status);
+        if (response.data.status === "no_project_found") {
+          continue;
+        } else {
+          response.data.project = path;
           break;
         }
       }

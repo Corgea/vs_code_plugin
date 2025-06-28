@@ -114,8 +114,10 @@ export default class VulnerabilitiesProvider
     }
 
     // Fetch fresh data
+    const repoNames = await WorkspacManager.getWorkspaceRepoNames();
     const response = await APIManager.getProjectVulnerabilities(
       potentialNames,
+      repoNames
     ).catch(async (error: any) => {
       if (error.status == 401) {
         await StorageManager.setValue<boolean>(StorageKeys.isLoggedIn, false);

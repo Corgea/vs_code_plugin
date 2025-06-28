@@ -17,7 +17,25 @@ export default class WorkspaceManager {
         return repoName || "";
       },
     );
-    return [path.basename(workspacePath), ...remotes].filter(Boolean);
+    return this.onlyUnique([path.basename(workspacePath), ...remotes].filter(Boolean));
+  }
+
+  private static onlyUnique(array: string[]): string[] {
+    return [...new Set(array)];
+  }
+
+  public static async getWorkspaceRepoNames(): Promise<string[]> {
+    const workspacePath = this.getWorkspaceFolderURI()?.fsPath;
+    if (!workspacePath) return [];
+    const remotes = (await GitManager.getRemoteUrls(workspacePath)).map(
+      (item) => {
+        const urlComponents = item.split("/");
+        const repoName = urlComponents.pop()?.replace(".git", "");
+        const owner = urlComponents.pop();
+        return `${owner}/${repoName}`;
+      },
+    );
+    return this.onlyUnique(remotes);
   }
 
   public static getRelativePathToWorkspace(

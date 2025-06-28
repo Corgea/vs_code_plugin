@@ -240,7 +240,8 @@ export default class APIManager {
 
   @cache(60 * 10)
   public static async getProjectVulnerabilities(
-    workspacePath: string | string[],
+    workspacePath: string[],
+    repoName: string[] = []
   ): Promise<
     AxiosResponse<{
       status: string;
@@ -254,23 +255,28 @@ export default class APIManager {
     try {
       const client = await this.getBaseClient();
       let response: any;
-      
-      for (const path of workspacePath) {
+      const loopItem: {path?: string, repo?: string}[] = [...workspacePath.map(p => ({path: p})), ...repoName.map(p => ({repo: p}))]
+      for (const item of loopItem) {
         // Fetch all pages recursively
         const allIssues: Vulnerability[] = [];
         let currentPage = 1;
         let totalPages = 1;
         
         do {
+          const params: {page: number, page_size: number, repo?: string, project?: string} = {
+            page: currentPage,
+            page_size: 50,
+          }
+          if (item.repo) {
+            params.repo = item.repo
+          } else {
+            params.project = item.path
+          }
           response = await client.get(
             `${corgeaUrl}/api/${this.apiVersion}/issues`,
             {
-              params: {
-                project: path,
-                page: currentPage,
-                page_size: 50, // Maximum page size as per API
-              },
-            },
+              params: params
+            }
           );
           this.checkForWarnings(response.headers, response.status);
           

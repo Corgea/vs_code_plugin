@@ -8,6 +8,7 @@ import VulnerabilityDetails from "../types/vulnerabilityDetails";
 import * as vscode from "vscode";
 import SCAVulnerability from "../types/scaVulnerability";
 import DebugManager from "./debugManager";
+import ErrorHandlingManager from "./ErrorHandlingManager";
 
 const cacheMap = new Map<string, {data: any, timestamp: number}>();
 const pendingRequests = new Map<string, Promise<any>>();
@@ -177,6 +178,22 @@ export default class APIManager {
           await DebugManager.log(`Error Headers: ${JSON.stringify(error.response.headers)}`);
           await DebugManager.log(`Error Data: ${JSON.stringify(error.response.data)}`);
           
+          // Capture errors in Sentry, excluding 400 status codes
+          if (![400, 401, 403].includes(error.response.status)) {
+            ErrorHandlingManager.handleError(error, {
+              method: 'axios_request',
+              className: 'APIManager',
+              additionalData: {
+                url: error?.config?.url,
+                method: error?.config?.method,
+                data: error?.config?.data,
+                status: error?.response?.status,
+                response: error?.response?.data,
+                headers: error?.config?.headers
+              }
+            });
+          }
+          
           if (error.response.status === 401 && showError) {
             vscode.window.showErrorMessage(
               "Token is expired or invalid. Please update it.",
@@ -184,6 +201,19 @@ export default class APIManager {
           }
         } else {
           await DebugManager.log(`Request Error: ${error.message}`);
+          
+          // Capture network errors (no response)
+          ErrorHandlingManager.handleError(error, {
+            method: 'axios_request',
+            className: 'APIManager',
+            additionalData: {
+              url: error?.config?.url,
+              method: error?.config?.method,
+              data: error?.config?.data,
+              message: error.message,
+              code: error.code
+            }
+          });
         }
         return Promise.reject(error);
       },

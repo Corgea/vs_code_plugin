@@ -9,6 +9,7 @@ import StorageManager, {
   StorageKeys,
   StorageSecretKeys,
 } from "../utils/storageManager";
+import { withErrorHandling } from "../utils/ErrorHandlingManager";
 
 export default class scanningService {
   @OnCommand("corgea.scan-uncommitted")
@@ -22,6 +23,7 @@ export default class scanningService {
     before commit (git hooks integration), warning...
   */
   @OnCommand("corgea.scan-full")
+  @withErrorHandling()
   public static async scanProject(isFullScan: boolean = true) {
     const contextUri = ContextManager.getContext().extensionUri;
     const myVenvPath = vscode.Uri.joinPath(

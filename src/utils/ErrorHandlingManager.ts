@@ -10,14 +10,6 @@ Sentry.init({
   sendDefaultPii: true,
 });
 
-// Handle unhandled exceptions and promise rejections
-process.on("uncaughtException", (err) => {
-    Sentry.captureException(err);
-});
-
-process.on("unhandledRejection", (reason: any) => {
-    Sentry.captureException(reason);
-});
 
 export default class ErrorHandlingManager {
     /**

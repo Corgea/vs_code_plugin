@@ -439,4 +439,128 @@ export default class APIManager {
       APIManager.hideLoadingStatus();
     }
   }
+
+  @cache()
+  public static async getScanVulnerabilities(
+    scanId: string,
+  ): Promise<
+    AxiosResponse<{
+      status: string;
+      page: number;
+      total_pages: number;
+      issues: Vulnerability[];
+    }>
+  > {
+    const corgeaUrl = await APIManager.getBaseUrl();
+    try {
+      const client = await this.getBaseClient();
+      let allIssues: Vulnerability[] = [];
+      let currentPage = 1;
+      let totalPages = 1;
+      
+      do {
+        const response = await client.get(
+          `${corgeaUrl}/api/${this.apiVersion}/scan/${scanId}/issues`,
+          {
+            params: {
+              page: currentPage,
+              page_size: 50, // Maximum page size as per API
+            },
+          },
+        );
+        this.checkForWarnings(response.headers, response.status);
+        
+        if (response.data.status === "ok" && response.data.issues) {
+          allIssues.push(...response.data.issues);
+          totalPages = response.data.total_pages;
+          currentPage++;
+        } else {
+          break;
+        }
+      } while (currentPage <= totalPages);
+      
+      return {
+        data: {
+          status: "ok",
+          page: 1,
+          total_pages: 1,
+          issues: allIssues,
+        },
+      } as AxiosResponse<{
+        status: string;
+        page: number;
+        total_pages: number;
+        issues: Vulnerability[];
+      }>;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
+  @cache()
+  public static async getScanSCAVulnerabilities(
+    scanId: string,
+  ): Promise<
+    AxiosResponse<{
+      status: string;
+      page: number;
+      total_pages: number;
+      total_issues: number;
+      issues: SCAVulnerability[];
+      project: string;
+    }>
+  > {
+    const corgeaUrl = await APIManager.getBaseUrl();
+    try {
+      const client = await this.getBaseClient();
+      let allIssues: SCAVulnerability[] = [];
+      let currentPage = 1;
+      let totalPages = 1;
+      let totalIssues = 0;
+      
+      do {
+        const response = await client.get(
+          `${corgeaUrl}/api/${this.apiVersion}/scan/${scanId}/issues/sca`,
+          {
+            params: {
+              page: currentPage,
+              page_size: 50, // Maximum page size as per API
+            },
+          },
+        );
+        this.checkForWarnings(response.headers, response.status);
+        
+        if (response.data.status === "ok" && response.data.issues) {
+          allIssues.push(...response.data.issues);
+          totalPages = response.data.total_pages;
+          totalIssues = response.data.total_issues;
+          currentPage++;
+        } else {
+          break;
+        }
+      } while (currentPage <= totalPages);
+      
+      return {
+        data: {
+          status: "ok",
+          page: 1,
+          total_pages: 1,
+          total_issues: totalIssues,
+          issues: allIssues,
+          project: "",
+        },
+      } as AxiosResponse<{
+        status: string;
+        page: number;
+        total_pages: number;
+        total_issues: number;
+        issues: SCAVulnerability[];
+        project: string;
+      }>;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
 }

@@ -7,6 +7,7 @@ import { OnEvent } from "../utils/eventsManager";
 import ViewsManager, { Views } from "../utils/ViewsManager";
 import Vulnerability from "../types/vulnerability";
 import SCAVulnerability from "../types/scaVulnerability";
+import scanningService, { ScanState } from "../services/scanningService";
 
 export default class VulnerabilitiesWebviewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "vulnerabilitiesWebview";
@@ -17,9 +18,15 @@ export default class VulnerabilitiesWebviewProvider implements vscode.WebviewVie
   private _scaVulnerabilities: SCAVulnerability[] = [];
   private _isLoading = false;
   private _projectNotFound = false;
+  private _scanState: ScanState;
+  private _autoRefreshEnabled = false;
+  private _autoRefreshInterval?: NodeJS.Timeout;
+  private _isInScanningMode = false;
 
   constructor(private readonly _extensionUri: vscode.Uri) {
     VulnerabilitiesWebviewProvider._instance = this;
+    this._scanState = scanningService.getScanState();
+    console.log('VulnerabilitiesWebviewProvider: Instance created');
   }
 
   public async resolveWebviewView(
@@ -28,6 +35,7 @@ export default class VulnerabilitiesWebviewProvider implements vscode.WebviewVie
     _token: vscode.CancellationToken,
   ) {
     this._view = webviewView;
+    console.log('VulnerabilitiesWebviewProvider: Webview resolved, view set:', !!this._view);
 
     webviewView.webview.options = {
       enableScripts: true,
@@ -61,6 +69,20 @@ export default class VulnerabilitiesWebviewProvider implements vscode.WebviewVie
           console.log('Scan project button clicked from webview');
           vscode.commands.executeCommand("corgea.scan-full");
           break;
+        case "cancelScan":
+          console.log('Cancel scan button clicked from webview');
+          vscode.commands.executeCommand("corgea.cancelScan");
+          break;
+        case "openScanUrl":
+          console.log('Open scan URL button clicked from webview');
+          if (this._scanState.scanUrl) {
+            vscode.env.openExternal(vscode.Uri.parse(this._scanState.scanUrl));
+          }
+          break;
+        case "toggleAutoRefresh":
+          console.log('Auto refresh toggle clicked from webview');
+          await this.toggleAutoRefresh();
+          break;
         default:
           console.log('Unknown message type:', data.type);
       }
@@ -68,6 +90,9 @@ export default class VulnerabilitiesWebviewProvider implements vscode.WebviewVie
 
     // Load initial data
     this.refresh();
+    
+    // Get initial scan state
+    this._scanState = scanningService.getScanState();
   }
 
   @OnCommand("vulnerabilities.refreshEntry")
@@ -80,6 +105,106 @@ export default class VulnerabilitiesWebviewProvider implements vscode.WebviewVie
       await VulnerabilitiesWebviewProvider._instance.refresh();
     } else {
       console.log('VulnerabilitiesWebviewProvider: No instance available for refresh');
+    }
+  }
+
+  @OnEvent("scan.started")
+  static async onScanStarted(): Promise<void> {
+    console.log('VulnerabilitiesWebviewProvider: Scan started event received');
+    if (VulnerabilitiesWebviewProvider._instance && VulnerabilitiesWebviewProvider._instance._view) {
+      VulnerabilitiesWebviewProvider._instance._scanState = scanningService.getScanState();
+      VulnerabilitiesWebviewProvider._instance._isInScanningMode = true;
+      VulnerabilitiesWebviewProvider._instance._autoRefreshEnabled = true;
+      VulnerabilitiesWebviewProvider._instance.startAutoRefresh();
+      VulnerabilitiesWebviewProvider._instance._view.webview.postMessage({
+        type: 'scanStateUpdate',
+        scanState: VulnerabilitiesWebviewProvider._instance._scanState
+      });
+      VulnerabilitiesWebviewProvider._instance._view.webview.postMessage({
+        type: 'enterScanningMode',
+        autoRefreshEnabled: true
+      });
+    }
+  }
+
+  @OnEvent("scan.progress")
+  static async onScanProgress(): Promise<void> {
+    console.log('VulnerabilitiesWebviewProvider: Scan progress event received');
+    if (VulnerabilitiesWebviewProvider._instance && VulnerabilitiesWebviewProvider._instance._view) {
+      VulnerabilitiesWebviewProvider._instance._scanState = scanningService.getScanState();
+      VulnerabilitiesWebviewProvider._instance._view.webview.postMessage({
+        type: 'scanStateUpdate',
+        scanState: VulnerabilitiesWebviewProvider._instance._scanState
+      });
+    }
+  }
+
+  @OnEvent("scan.output")
+  static async onScanOutput(): Promise<void> {
+    console.log('VulnerabilitiesWebviewProvider: Scan output event received');
+    if (VulnerabilitiesWebviewProvider._instance && VulnerabilitiesWebviewProvider._instance._view) {
+      VulnerabilitiesWebviewProvider._instance._scanState = scanningService.getScanState();
+      VulnerabilitiesWebviewProvider._instance._view.webview.postMessage({
+        type: 'scanStateUpdate',
+        scanState: VulnerabilitiesWebviewProvider._instance._scanState
+      });
+    }
+  }
+
+  @OnEvent("scan.completed")
+  static async onScanCompleted(): Promise<void> {
+    console.log('VulnerabilitiesWebviewProvider: Scan completed event received');
+    if (VulnerabilitiesWebviewProvider._instance && VulnerabilitiesWebviewProvider._instance._view) {
+      VulnerabilitiesWebviewProvider._instance._scanState = scanningService.getScanState();
+      VulnerabilitiesWebviewProvider._instance._isInScanningMode = false;
+      VulnerabilitiesWebviewProvider._instance.stopAutoRefresh();
+      VulnerabilitiesWebviewProvider._instance._view.webview.postMessage({
+        type: 'scanStateUpdate',
+        scanState: VulnerabilitiesWebviewProvider._instance._scanState
+      });
+      VulnerabilitiesWebviewProvider._instance._view.webview.postMessage({
+        type: 'exitScanningMode'
+      });
+      // Refresh only the vulnerability lists without re-rendering the scanning tab
+      await VulnerabilitiesWebviewProvider._instance.refreshVulnerabilityListsOnly();
+    }
+  }
+
+  @OnEvent("scan.cancelled")
+  static async onScanCancelled(): Promise<void> {
+    console.log('VulnerabilitiesWebviewProvider: Scan cancelled event received');
+    if (VulnerabilitiesWebviewProvider._instance && VulnerabilitiesWebviewProvider._instance._view) {
+      VulnerabilitiesWebviewProvider._instance._scanState = scanningService.getScanState();
+      VulnerabilitiesWebviewProvider._instance._isInScanningMode = false;
+      VulnerabilitiesWebviewProvider._instance.stopAutoRefresh();
+      VulnerabilitiesWebviewProvider._instance._view.webview.postMessage({
+        type: 'scanStateUpdate',
+        scanState: VulnerabilitiesWebviewProvider._instance._scanState
+      });
+      VulnerabilitiesWebviewProvider._instance._view.webview.postMessage({
+        type: 'exitScanningMode'
+      });
+      // Refresh only the vulnerability lists without re-rendering the scanning tab
+      await VulnerabilitiesWebviewProvider._instance.refreshVulnerabilityListsOnly();
+    }
+  }
+
+  @OnEvent("scan.error")
+  static async onScanError(): Promise<void> {
+    console.log('VulnerabilitiesWebviewProvider: Scan error event received');
+    if (VulnerabilitiesWebviewProvider._instance && VulnerabilitiesWebviewProvider._instance._view) {
+      VulnerabilitiesWebviewProvider._instance._scanState = scanningService.getScanState();
+      VulnerabilitiesWebviewProvider._instance._isInScanningMode = false;
+      VulnerabilitiesWebviewProvider._instance.stopAutoRefresh();
+      VulnerabilitiesWebviewProvider._instance._view.webview.postMessage({
+        type: 'scanStateUpdate',
+        scanState: VulnerabilitiesWebviewProvider._instance._scanState
+      });
+      VulnerabilitiesWebviewProvider._instance._view.webview.postMessage({
+        type: 'exitScanningMode'
+      });
+      // Refresh only the vulnerability lists without re-rendering the scanning tab
+      await VulnerabilitiesWebviewProvider._instance.refreshVulnerabilityListsOnly();
     }
   }
 
@@ -198,6 +323,9 @@ export default class VulnerabilitiesWebviewProvider implements vscode.WebviewVie
       scaVulnerabilities: this._scaVulnerabilities,
       fileGroups,
       packageGroups,
+      scanState: this._scanState,
+      isInScanningMode: this._isInScanningMode,
+      autoRefreshEnabled: this._autoRefreshEnabled,
     });
   }
 
@@ -234,6 +362,149 @@ export default class VulnerabilitiesWebviewProvider implements vscode.WebviewVie
       vulnerabilities
     }));
   }
-}
+
+  private async toggleAutoRefresh(): Promise<void> {
+    this._autoRefreshEnabled = !this._autoRefreshEnabled;
+    
+    if (this._autoRefreshEnabled) {
+      this.startAutoRefresh();
+    } else {
+      this.stopAutoRefresh();
+    }
+
+    // Notify webview of the state change
+    if (this._view) {
+      this._view.webview.postMessage({
+        type: 'autoRefreshToggled',
+        enabled: this._autoRefreshEnabled
+      });
+    }
+  }
+
+  private startAutoRefresh(): void {
+    if (this._autoRefreshInterval) {
+      clearInterval(this._autoRefreshInterval);
+    }
+
+    // Immediately fetch if we have a scan ID
+    if (this._scanState.scanId && this._autoRefreshEnabled) {
+      this.refreshScanVulnerabilities();
+    }
+
+    this._autoRefreshInterval = setInterval(async () => {
+      if (this._autoRefreshEnabled && this._scanState.scanId) {
+        await this.refreshScanVulnerabilities();
+      }
+    }, 3000); // 3 second interval
+  }
+
+  private stopAutoRefresh(): void {
+    if (this._autoRefreshInterval) {
+      clearInterval(this._autoRefreshInterval);
+      this._autoRefreshInterval = undefined;
+    }
+  }
+
+  private async refreshScanVulnerabilities(): Promise<void> {
+    if (!this._scanState.scanId) {
+      return;
+    }
+
+    try {
+      const [response, scaResponse] = await Promise.all([
+        APIManager.getScanVulnerabilities(this._scanState.scanId).catch((error: any) => ({
+          data: { status: "error", issues: [] },
+        })),
+        APIManager.getScanSCAVulnerabilities(this._scanState.scanId).catch((error: any) => ({
+          data: { status: "error", issues: [] },
+        }))
+      ]);
+
+      const newVulnerabilities = response.data.issues || [];
+      const newSCAVulnerabilities = scaResponse.data.issues || [];
+
+      // Update vulnerabilities
+      this._vulnerabilities = newVulnerabilities;
+      this._scaVulnerabilities = newSCAVulnerabilities;
+      
+      // Group vulnerabilities by file and package
+      const fileGroups = newVulnerabilities.length > 0 ? this._groupVulnerabilitiesByFile() : [];
+      const packageGroups = newSCAVulnerabilities.length > 0 ? this._groupSCAVulnerabilitiesByPackage() : [];
+
+      // Send update to webview
+      if (this._view) {
+        this._view.webview.postMessage({
+          type: 'updateVulnerabilityLists',
+          vulnerabilities: newVulnerabilities,
+          scaVulnerabilities: newSCAVulnerabilities,
+          fileGroups,
+          packageGroups,
+          hasVulnerabilities: newVulnerabilities.length > 0,
+          hasSCAVulnerabilities: newSCAVulnerabilities.length > 0
+        });
+      }
+         } catch (error) {
+       console.error("Error refreshing scan vulnerabilities:", error);
+     }
+   }
+
+   private async refreshVulnerabilityListsOnly(): Promise<void> {
+     if (!this._view) {
+       return;
+     }
+
+     try {
+       // Clear API caches and fetch fresh data using regular project endpoints
+       APIManager.clearAllCaches();
+       
+       const authenticated = await StorageManager.getValue<boolean>(StorageKeys.isLoggedIn);
+       if (!authenticated) {
+         return;
+       }
+
+       const potentialNames = await WorkspacManager.getWorkspacePotentialNames();
+       if (!potentialNames || potentialNames.length === 0) {
+         return;
+       }
+
+       // Fetch vulnerabilities using regular project endpoints
+       const [response, scaResponse] = await Promise.all([
+         APIManager.getProjectVulnerabilities(potentialNames).catch((error: any) => ({
+           status: error.status,
+           data: { status: "no_project_found", issues: [] },
+         })),
+         APIManager.getProjectSCAVulnerabilities(potentialNames).catch((error: any) => ({
+           status: error.status,
+           data: { status: "no_project_found", issues: [] },
+         }))
+       ]);
+
+       const newVulnerabilities = response.data.issues || [];
+       const newSCAVulnerabilities = scaResponse.data.issues || [];
+
+       // Update internal state
+       this._vulnerabilities = newVulnerabilities;
+       this._scaVulnerabilities = newSCAVulnerabilities;
+       this._projectNotFound = response.data.status === "no_project_found";
+       
+       // Group vulnerabilities by file and package
+       const fileGroups = newVulnerabilities.length > 0 ? this._groupVulnerabilitiesByFile() : [];
+       const packageGroups = newSCAVulnerabilities.length > 0 ? this._groupSCAVulnerabilitiesByPackage() : [];
+
+       // Send update to webview (this won't affect the scanning tab)
+       this._view.webview.postMessage({
+         type: 'updateVulnerabilityLists',
+         vulnerabilities: newVulnerabilities,
+         scaVulnerabilities: newSCAVulnerabilities,
+         fileGroups,
+         packageGroups,
+         hasVulnerabilities: newVulnerabilities.length > 0,
+         hasSCAVulnerabilities: newSCAVulnerabilities.length > 0
+       });
+     } catch (error) {
+       console.error("Error refreshing vulnerability lists only:", error);
+     }
+   }
+ }
 
  

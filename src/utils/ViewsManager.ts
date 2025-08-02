@@ -7,6 +7,9 @@ export enum Views {
   SCAVulnerabilityDetails = "scaVulnerabilityDetails.pug",
   VulnerabilitiesList = "vulnerabilitiesList.pug",
   GenericError = "genericError.pug",
+  CodeVulnerabilityList = "codeVulnerabilityList.pug",
+  SCAVulnerabilityList = "scaVulnerabilityList.pug",
+  ScanningEmptyState = "scanningEmptyState.pug",
 }
 
 export default class ViewsManager {

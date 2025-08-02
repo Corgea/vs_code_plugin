@@ -199,7 +199,7 @@ html
       .empty-state {
         text-align: center;
         padding: 60px 20px;
-        color: var(--vscode-descriptionForeground);
+        color: var(--vscode-foreground);
       }
       
       .empty-icon {
@@ -272,8 +272,14 @@ html
        }
        
        .text-muted {
-         color: var(--vscode-descriptionForeground);
+         color: var(--vscode-descriptionForeground) !important;
+         opacity: 0.8;
          font-size: 13px;
+       }
+
+       .empty-state div {
+         color: var(--vscode-foreground);
+         font-weight: 500;
        }
        
        .mt-2 {
@@ -366,14 +372,245 @@ html
          --button-primary-hover-background: #e55a1f;
        }
 
+       /* Auto-refresh button styles */
+       .header-actions {
+         display: flex;
+         gap: 8px;
+         align-items: center;
+       }
+       
+       #autoRefreshBtn.auto-refresh-enabled {
+         --button-secondary-background: #3fb950;
+         --button-secondary-foreground: #ffffff;
+         --button-secondary-hover-background: #2ea043;
+       }
+       
+       @keyframes spin {
+         0% { transform: rotate(0deg); }
+         100% { transform: rotate(360deg); }
+       }
+
+       /* Scanning Tab Styles */
+       .scanning-container {
+         padding: 20px 0;
+       }
+
+       .scanning-progress {
+         margin-bottom: 30px;
+       }
+
+       .progress-steps {
+         display: flex;
+         justify-content: space-between;
+         margin-bottom: 20px;
+         position: relative;
+       }
+
+       .progress-steps::before {
+         content: '';
+         position: absolute;
+         top: 20px;
+         left: 0;
+         right: 0;
+         height: 2px;
+         background: var(--vscode-panel-border);
+         z-index: 1;
+       }
+
+       .step {
+         display: flex;
+         flex-direction: column;
+         align-items: center;
+         position: relative;
+         z-index: 2;
+         flex: 1;
+       }
+
+       .step-icon {
+         width: 40px;
+         height: 40px;
+         border-radius: 50%;
+         background: var(--vscode-button-secondaryBackground);
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         margin-bottom: 8px;
+         transition: all 0.3s;
+       }
+
+       .step.active .step-icon {
+         background: var(--corgea-orange);
+         color: white;
+         animation: pulse-glow 2s infinite;
+       }
+
+       .step.completed .step-icon {
+         background: #3fb950;
+         color: white;
+       }
+
+       .step-text {
+         font-size: 12px;
+         color: var(--vscode-descriptionForeground);
+         text-align: center;
+       }
+
+       .step.active .step-text {
+         color: var(--vscode-foreground);
+         font-weight: 600;
+       }
+
+       .current-progress {
+         text-align: center;
+         margin-bottom: 20px;
+       }
+
+       .progress-text {
+         font-size: 14px;
+         color: var(--vscode-foreground);
+         margin-bottom: 10px;
+       }
+
+       .progress-bar-container {
+         display: flex;
+         align-items: center;
+         gap: 10px;
+         justify-content: center;
+       }
+
+       .progress-bar {
+         width: 200px;
+         height: 6px;
+         background: var(--vscode-panel-border);
+         border-radius: 3px;
+         overflow: hidden;
+       }
+
+       .progress-fill {
+         height: 100%;
+         background: var(--corgea-orange);
+         transition: width 0.3s ease;
+       }
+
+       .progress-percentage {
+         font-size: 12px;
+         font-weight: 600;
+         color: var(--vscode-foreground);
+         min-width: 40px;
+       }
+
+       .scanning-actions {
+         display: flex;
+         justify-content: center;
+         gap: 10px;
+         margin-bottom: 20px;
+       }
+
+       .scanning-error,
+       .scanning-completed,
+       .scanning-idle {
+         text-align: center;
+         padding: 40px 20px;
+       }
+
+       .error-icon i,
+       .completed-icon i,
+       .idle-icon i {
+         font-size: 48px;
+         margin-bottom: 16px;
+       }
+
+       .error-icon i {
+         color: #f85149;
+       }
+
+       .completed-icon i {
+         color: #3fb950;
+       }
+
+       .idle-icon i {
+         color: var(--vscode-descriptionForeground);
+         opacity: 0.7;
+       }
+
+       .error-message,
+       .completed-message,
+       .idle-message {
+         font-size: 14px;
+         color: var(--vscode-foreground);
+         margin-bottom: 16px;
+       }
+
+       .terminal-output {
+         margin-top: 20px;
+         border: 1px solid var(--vscode-panel-border);
+         border-radius: 6px;
+         overflow: hidden;
+       }
+
+       .terminal-header {
+         background: var(--vscode-list-hoverBackground);
+         padding: 8px 12px;
+         border-bottom: 1px solid var(--vscode-panel-border);
+       }
+
+       .terminal-title {
+         font-size: 12px;
+         font-weight: 600;
+         color: var(--vscode-foreground);
+       }
+
+       .terminal-content {
+         background: var(--vscode-textCodeBlock-background);
+         max-height: 300px;
+         overflow-y: auto;
+         padding: 12px;
+         font-family: var(--vscode-editor-font-family);
+         font-size: 12px;
+         line-height: 1.4;
+       }
+
+       .terminal-line {
+         color: var(--vscode-foreground);
+         white-space: pre-wrap;
+         word-wrap: break-word;
+       }
+
+       .scanning-indicator {
+         background: var(--corgea-orange);
+         animation: pulse 1.5s infinite;
+       }
+
+       @keyframes pulse {
+         0%, 100% { opacity: 1; }
+         50% { opacity: 0.5; }
+       }
+
+       @keyframes pulse-glow {
+         0%, 100% { 
+           box-shadow: 0 0 0 0 rgba(245, 108, 38, 0.7);
+           transform: scale(1);
+         }
+         50% { 
+           box-shadow: 0 0 0 10px rgba(245, 108, 38, 0);
+           transform: scale(1.05);
+         }
+       }
+
   body
     .header
       .header-left
         img.logo(src!=logoURI, alt="Corgea Logo")
         .title Vulnerabilities
       if isAuthenticated
-        vscode-button(appearance="secondary", onclick="refresh()")
-          i.fas.fa-refresh
+        .header-actions
+          if isInScanningMode
+            vscode-button#autoRefreshBtn(appearance="secondary", onclick="toggleAutoRefresh()", class=autoRefreshEnabled ? "auto-refresh-enabled" : "")
+              i.fas.fa-sync-alt(class=autoRefreshEnabled ? "fa-spin" : "")
+              | &nbsp;Auto-refresh
+          else
+            vscode-button(appearance="secondary", onclick="refresh()")
+              i.fas.fa-refresh
     
     if isLoading
       .loading
@@ -397,10 +634,6 @@ html
               button.btn.btn-primary.scan-button.d-flex.align-items-center.justify-content-center(onclick="scanProject()")
                 i.fas.fa-shield-alt
                 | &nbsp;Run Security Scan
-    else if !hasVulnerabilities && !hasSCAVulnerabilities
-      .empty-state
-        .empty-icon 🛡️
-        div No vulnerabilities found in this project
     else
       // Tabs
       ul.nav.nav-tabs(role="tablist")
@@ -416,69 +649,135 @@ html
             | &nbsp;Dependencies
             if hasSCAVulnerabilities
               span.count-badge= scaVulnerabilities.length
+        li.nav-item(role="presentation")
+          button.nav-link(id="scanning-tab", data-bs-toggle="tab", data-bs-target="#scanning", type="button", role="tab", aria-controls="scanning", aria-selected="false")
+            i.fas.fa-search
+            | &nbsp;Scanning
+            if scanState && scanState.isScanning
+              span.count-badge.scanning-indicator
+                i.fas.fa-spinner.fa-spin
       
       // Tab Content
       .tab-content
         // Code Vulnerabilities Tab
         .tab-pane.fade.show.active(id="code-vulnerabilities", role="tabpanel", aria-labelledby="code-tab")
-          if hasVulnerabilities
-            .accordion(id="codeAccordion")
-              each fileGroup in fileGroups
-                .accordion-item
-                  h2.accordion-header(id=`code-heading-${fileGroup.index}`)
-                    button.accordion-button.collapsed(type="button", data-bs-toggle="collapse", data-bs-target=`#code-collapse-${fileGroup.index}`, aria-expanded="false", aria-controls=`code-collapse-${fileGroup.index}`)
-                      .file-path
-                        i.fas.fa-file-code.file-icon
-                        span= fileGroup.path
-                        span.count-badge= fileGroup.vulnerabilities.length
-                  div.accordion-collapse.collapse(id=`code-collapse-${fileGroup.index}`, aria-labelledby=`code-heading-${fileGroup.index}`, data-bs-parent="#codeAccordion")
-                    .accordion-body
-                      each vuln, vulnIndex in fileGroup.vulnerabilities
-                        .vulnerability-item(data-vuln-id=vuln.id, onclick=`showVulnerabilityDetails('${vuln.id}')`)
-                          .vuln-info
-                            .vuln-name= vuln.classification ? vuln.classification.name : 'Unknown Vulnerability'
-                            .vuln-details
-                              span.line-number Line #{vuln.location.line_number}
-                              span Status: #{vuln.status}
-                          .severity-badge(class=vuln.urgency, data-original-severity=vuln.urgency)= vuln.urgency
-          else
-            .empty-state
-              .empty-icon 📝
-              div No code vulnerabilities found
+          #codeVulnerabilityListContainer
+            include codeVulnerabilityList.pug
+          
+          // Template for dynamic rendering
+          template#codeVulnerabilityTemplate
+            include codeVulnerabilityList.pug
+          
+          // Template for scanning empty state
+          template#scanningEmptyTemplate
+            include scanningEmptyState.pug
         
         // SCA Vulnerabilities Tab  
         .tab-pane.fade(id="sca-vulnerabilities", role="tabpanel", aria-labelledby="sca-tab")
-          if hasSCAVulnerabilities
-            .accordion(id="scaAccordion")
-              each packageGroup in packageGroups
-                .accordion-item
-                  h2.accordion-header(id=`sca-heading-${packageGroup.index}`)
-                    button.accordion-button.collapsed(type="button", data-bs-toggle="collapse", data-bs-target=`#sca-collapse-${packageGroup.index}`, aria-expanded="false", aria-controls=`sca-collapse-${packageGroup.index}`)
-                      .package-name
-                        i.fas.fa-cube.package-icon
-                        span= packageGroup.name
-                        span.count-badge= packageGroup.vulnerabilities.length
-                  div.accordion-collapse.collapse(id=`sca-collapse-${packageGroup.index}`, aria-labelledby=`sca-heading-${packageGroup.index}`, data-bs-parent="#scaAccordion")
-                    .accordion-body
-                      each vuln, vulnIndex in packageGroup.vulnerabilities
-                        .vulnerability-item(data-sca-vuln-id=vuln.id, onclick=`showSCAVulnerabilityDetails('${vuln.id}')`)
-                          .vuln-info
-                            .vuln-name= vuln.cve
-                            .vuln-details
-                              span Fixed in version #{vuln.package.fix_version}
-                              span= vuln.package.ecosystem
-                          .severity-badge(class=vuln.severity, data-original-severity=vuln.severity)= vuln.severity
-          else
-            .empty-state
-              .empty-icon 📦
-              div No SCA vulnerabilities found
+          #scaVulnerabilityListContainer
+            include scaVulnerabilityList.pug
+          
+          // Template for dynamic rendering
+          template#scaVulnerabilityTemplate
+            include scaVulnerabilityList.pug
+
+        // Scanning Tab
+        .tab-pane.fade(id="scanning", role="tabpanel", aria-labelledby="scanning-tab")
+          .scanning-container
+            if scanState && scanState.isScanning
+              // Progress Steps
+              .scanning-progress
+                .progress-steps
+                  .step(class=scanState.progress && scanState.progress.some(p => p.stage === 'initializing' || p.stage === 'installing' || p.stage === 'authenticating') ? 'active' : '')
+                    .step-icon
+                      i.fas.fa-cog
+                    .step-text Initializing
+                  .step(class=scanState.progress && scanState.progress.some(p => p.stage === 'packaging') ? 'active' : '')
+                    .step-icon
+                      i.fas.fa-box
+                    .step-text Packaging
+                  .step(class=scanState.progress && scanState.progress.some(p => p.stage === 'uploading') ? 'active' : '')
+                    .step-icon
+                      i.fas.fa-upload
+                    .step-text Uploading
+                  .step(class=scanState.progress && scanState.progress.some(p => p.stage === 'scanning' || p.stage === 'started') ? 'active' : '')
+                    .step-icon
+                      i.fas.fa-search
+                    .step-text Scanning
+
+                // Current Progress
+                .current-progress
+                  if scanState.progress && scanState.progress.length > 0
+                    - const latestProgress = scanState.progress[scanState.progress.length - 1]
+                    .progress-text= latestProgress.message
+                    if latestProgress.percentage !== undefined
+                      .progress-bar-container
+                        .progress-bar
+                          .progress-fill(style=`width: ${latestProgress.percentage}%`)
+                        .progress-percentage= `${latestProgress.percentage.toFixed(1)}%`
+
+              // Action Buttons
+              .scanning-actions
+                if scanState.scanUrl
+                  button.btn.btn-primary.me-2(onclick="openScanUrl()")
+                    i.fas.fa-external-link-alt
+                    | &nbsp;View in Corgea
+                button.btn.btn-secondary(onclick="cancelScan()")
+                  i.fas.fa-times
+                  | &nbsp;Cancel Scan
+
+            else if scanState && scanState.error
+              // Error State
+              .scanning-error
+                .error-icon
+                  i.fas.fa-exclamation-triangle
+                .error-message= scanState.error
+                button.btn.btn-primary.mt-3(onclick="scanProject()")
+                  i.fas.fa-redo
+                  | &nbsp;Try Again
+
+            else if scanState && scanState.progress && scanState.progress.some(p => p.stage === 'completed')
+              // Completed State
+              .scanning-completed
+                .completed-icon
+                  i.fas.fa-check-circle
+                .completed-message Scan completed successfully!
+                .completed-actions.mt-3
+                  if scanState.scanUrl
+                    button.btn.btn-primary.me-2(onclick="openScanUrl()")
+                      i.fas.fa-external-link-alt
+                      | &nbsp;View Results in Corgea
+                  button.btn.btn-secondary(onclick="scanProject()")
+                    i.fas.fa-redo
+                    | &nbsp;Scan Again
+
+            else
+              // No scan running
+              .scanning-idle
+                .idle-icon
+                  i.fas.fa-search
+                .idle-message Start a security scan to analyze your code for vulnerabilities
+                button.btn.btn-primary.mt-3(onclick="scanProject()")
+                  i.fas.fa-play
+                  | &nbsp;Start Scan
+
+            // Terminal Output
+            if scanState && scanState.output && scanState.output.length > 0
+              .terminal-output
+                .terminal-header
+                  .terminal-title
+                    i.fas.fa-terminal
+                    | &nbsp;Scan Output
+                .terminal-content(id="terminalOutput")
+                  each line in scanState.output
+                    .terminal-line= line
 
     script.
       const vscode = acquireVsCodeApi();
       
       // Store vulnerability data for lookup
-      const vulnerabilitiesData = !{JSON.stringify(vulnerabilities || [])};
-      const scaVulnerabilitiesData = !{JSON.stringify(scaVulnerabilities || [])};
+      let vulnerabilitiesData = !{JSON.stringify(vulnerabilities || [])};
+      let scaVulnerabilitiesData = !{JSON.stringify(scaVulnerabilities || [])};
       
       // Severity mapping for consistent display (short format)
       const severityMap = {
@@ -511,6 +810,840 @@ html
         vscode.postMessage({ type: 'scanProject' });
       }
 
+      function cancelScan() {
+        vscode.postMessage({ type: 'cancelScan' });
+      }
+
+      function openScanUrl() {
+        vscode.postMessage({ type: 'openScanUrl' });
+      }
+
+      function toggleAutoRefresh() {
+        vscode.postMessage({ type: 'toggleAutoRefresh' });
+      }
+
+      // Handle messages from the extension
+      window.addEventListener('message', event => {
+        const message = event.data;
+        
+        switch (message.type) {
+          case 'scanStateUpdate':
+            updateScanState(message.scanState);
+            break;
+          case 'enterScanningMode':
+            enterScanningMode(message.autoRefreshEnabled);
+            break;
+          case 'exitScanningMode':
+            exitScanningMode();
+            break;
+          case 'autoRefreshToggled':
+            updateAutoRefreshButton(message.enabled);
+            break;
+          case 'updateVulnerabilityLists':
+            updateVulnerabilityLists(message);
+            break;
+        }
+      });
+
+      // Global scan state variable
+      let currentScanState = !{JSON.stringify(scanState || {})};
+      let previousScanState = null;
+      let isInScanningMode = !{JSON.stringify(isInScanningMode || false)};
+
+      function updateScanState(newScanState) {
+        previousScanState = JSON.parse(JSON.stringify(currentScanState)); // Deep copy
+        currentScanState = newScanState;
+        
+        // Update scanning tab indicator
+        updateScanningTabIndicator();
+        
+        // Only update scanning tab content if currently visible
+        const scanningTab = document.getElementById('scanning');
+        if (scanningTab && scanningTab.classList.contains('active')) {
+          updateScanningTabContentSelectively();
+        }
+        
+        // Auto-switch to scanning tab if scan just started
+        if (newScanState.isScanning && newScanState.progress && newScanState.progress.length === 1) {
+          const scanningTabButton = document.getElementById('scanning-tab');
+          if (scanningTabButton && !scanningTabButton.classList.contains('active')) {
+            scanningTabButton.click();
+          }
+        }
+      }
+
+      function updateScanningTabIndicator() {
+        const scanningTab = document.getElementById('scanning-tab');
+        if (!scanningTab) return;
+        
+        const indicatorElement = scanningTab.querySelector('.scanning-indicator');
+        
+        if (currentScanState.isScanning) {
+          if (!indicatorElement) {
+            const indicator = document.createElement('span');
+            indicator.className = 'count-badge scanning-indicator';
+            indicator.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            scanningTab.appendChild(indicator);
+          }
+        } else {
+          if (indicatorElement) {
+            indicatorElement.remove();
+          }
+        }
+      }
+
+      function updateScanningTabContent() {
+        const scanningContainer = document.querySelector('.scanning-container');
+        if (!scanningContainer) return;
+        
+        if (currentScanState.isScanning) {
+          updateScanningProgress();
+        } else if (currentScanState.error) {
+          updateScanningError();
+        } else if (currentScanState.progress && currentScanState.progress.some(p => p.stage === 'completed')) {
+          updateScanningCompleted();
+        } else if (currentScanState.progress && currentScanState.progress.some(p => p.stage === 'cancelled')) {
+          updateScanningCancelled();
+        } else {
+          updateScanningIdle();
+        }
+        
+        // Update terminal output
+        updateTerminalOutput();
+      }
+
+             function updateScanningTabContentSelectively() {
+         if (!previousScanState) {
+           // First time, render everything
+           updateScanningTabContent();
+           return;
+         }
+
+         // Check what has changed and update only those parts
+         if (stateTransitionOccurred()) {
+           // Major state change, re-render everything
+           updateScanningTabContent();
+           return;
+         }
+
+         if (currentScanState.isScanning) {
+           updateStepperSelectively();
+           updateProgressTextSelectively();
+           updateProgressBarSelectively();
+           updateActionButtonsSelectively();
+           ensureTerminalOutputExists();
+         }
+         
+         updateTerminalOutputSelectively();
+       }
+
+             function stateTransitionOccurred() {
+         const prevIsScanning = previousScanState.isScanning;
+         const currIsScanning = currentScanState.isScanning;
+         const prevHasError = !!previousScanState.error;
+         const currHasError = !!currentScanState.error;
+         const prevCompleted = previousScanState.progress && previousScanState.progress.some(p => p.stage === 'completed');
+         const currCompleted = currentScanState.progress && currentScanState.progress.some(p => p.stage === 'completed');
+         const prevCancelled = previousScanState.progress && previousScanState.progress.some(p => p.stage === 'cancelled');
+         const currCancelled = currentScanState.progress && currentScanState.progress.some(p => p.stage === 'cancelled');
+
+         return prevIsScanning !== currIsScanning || 
+                prevHasError !== currHasError || 
+                prevCompleted !== currCompleted ||
+                prevCancelled !== currCancelled;
+       }
+
+             function updateScanningProgress() {
+         const scanningContainer = document.querySelector('.scanning-container');
+         
+         let latestProgress = null;
+         if (currentScanState.progress && currentScanState.progress.length > 0) {
+           // Filter out "Scan url available" messages
+           const filteredProgress = currentScanState.progress.filter(p => p.stage !== 'url_ready');
+           if (filteredProgress.length > 0) {
+             latestProgress = filteredProgress[filteredProgress.length - 1];
+           }
+         }
+         
+         scanningContainer.innerHTML = `
+           <div class="scanning-progress">
+             <div class="progress-steps">
+               <div class="step ${getStepClass('initializing')}">
+                 <div class="step-icon">${getStepIcon('initializing')}</div>
+                 <div class="step-text">Initializing</div>
+               </div>
+               <div class="step ${getStepClass('packaging')}">
+                 <div class="step-icon">${getStepIcon('packaging')}</div>
+                 <div class="step-text">Packaging</div>
+               </div>
+               <div class="step ${getStepClass('uploading')}">
+                 <div class="step-icon">${getStepIcon('uploading')}</div>
+                 <div class="step-text">Uploading</div>
+               </div>
+               <div class="step ${getStepClass('scanning')}">
+                 <div class="step-icon">${getStepIcon('scanning')}</div>
+                 <div class="step-text">Scanning</div>
+               </div>
+             </div>
+             
+             ${latestProgress ? `
+               <div class="current-progress">
+                 <div class="progress-text">${latestProgress.message}</div>
+                 ${latestProgress.percentage !== undefined ? `
+                   <div class="progress-bar-container">
+                     <div class="progress-bar">
+                       <div class="progress-fill" style="width: ${latestProgress.percentage}%"></div>
+                     </div>
+                     <div class="progress-percentage">${latestProgress.percentage.toFixed(1)}%</div>
+                   </div>
+                 ` : ''}
+               </div>
+             ` : ''}
+           </div>
+           
+           <div class="scanning-actions">
+             ${currentScanState.scanUrl ? `
+               <button class="btn btn-primary me-2" onclick="openScanUrl()">
+                 <i class="fas fa-external-link-alt"></i>&nbsp;View in Corgea
+               </button>
+             ` : ''}
+             <button class="btn btn-secondary" onclick="cancelScan()">
+               <i class="fas fa-times"></i>&nbsp;Cancel Scan
+             </button>
+           </div>
+           
+           ${getTerminalOutputHTML()}
+         `;
+       }
+
+      function updateScanningError() {
+        const scanningContainer = document.querySelector('.scanning-container');
+        scanningContainer.innerHTML = `
+          <div class="scanning-error">
+            <div class="error-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="error-message">${currentScanState.error}</div>
+            <button class="btn btn-primary mt-3" onclick="scanProject()">
+              <i class="fas fa-redo"></i>&nbsp;Try Again
+            </button>
+          </div>
+          ${getTerminalOutputHTML()}
+        `;
+      }
+
+       function updateScanningCompleted() {
+         const scanningContainer = document.querySelector('.scanning-container');
+         scanningContainer.innerHTML = `
+           <div class="scanning-completed">
+             <div class="completed-icon"><i class="fas fa-check-circle"></i></div>
+             <div class="completed-message">Scan completed successfully!</div>
+             <div class="completed-actions mt-3">
+               ${currentScanState.scanUrl ? `
+                 <button class="btn btn-primary me-2" onclick="openScanUrl()">
+                   <i class="fas fa-external-link-alt"></i>&nbsp;View Results in Corgea
+                 </button>
+               ` : ''}
+               <button class="btn btn-secondary" onclick="scanProject()">
+                 <i class="fas fa-redo"></i>&nbsp;Scan Again
+               </button>
+             </div>
+           </div>
+           ${getTerminalOutputHTML()}
+         `;
+       }
+
+       function updateScanningIdle() {
+         const scanningContainer = document.querySelector('.scanning-container');
+         scanningContainer.innerHTML = `
+           <div class="scanning-idle">
+             <div class="idle-icon"><i class="fas fa-search"></i></div>
+             <div class="idle-message">Start a security scan to analyze your code for vulnerabilities</div>
+             <button class="btn btn-primary mt-3" onclick="scanProject()">
+               <i class="fas fa-play"></i>&nbsp;Start Scan
+             </button>
+           </div>
+           ${getTerminalOutputHTML()}
+         `;
+       }
+
+       function updateScanningCancelled() {
+         const scanningContainer = document.querySelector('.scanning-container');
+         scanningContainer.innerHTML = `
+           <div class="scanning-error">
+             <div class="error-icon"><i class="fas fa-times-circle" style="color: #ff9500;"></i></div>
+             <div class="error-message">Scan was cancelled</div>
+             <button class="btn btn-primary mt-3" onclick="scanProject()">
+               <i class="fas fa-play"></i>&nbsp;Start New Scan
+             </button>
+           </div>
+           ${getTerminalOutputHTML()}
+         `;
+       }
+
+       function getStepClass(stage) {
+         if (!currentScanState.stages) return '';
+         
+         const stageKey = getStageKey(stage);
+         if (!stageKey) return '';
+         
+         if (currentScanState.stages[stageKey]) {
+           return 'completed';
+         } else if (getCurrentActiveStage() === stage) {
+           return 'active';
+         }
+         
+         return '';
+       }
+
+       function getStageKey(stage) {
+         const mapping = {
+           'initializing': 'init',
+           'packaging': 'package', 
+           'uploading': 'upload',
+           'scanning': 'scan'
+         };
+         return mapping[stage];
+       }
+
+       function getCurrentActiveStage() {
+         if (!currentScanState.stages) return 'initializing';
+         
+         // Find the first false stage - that's the active one
+         if (!currentScanState.stages.init) return 'initializing';
+         if (!currentScanState.stages.package) return 'packaging';
+         if (!currentScanState.stages.upload) return 'uploading';
+         if (!currentScanState.stages.scan) return 'scanning';
+         
+         // All stages complete
+         return null;
+       }
+
+       function getStepIcon(stage) {
+         if (!currentScanState.stages) {
+           return getDefaultIcon(stage);
+         }
+         
+         const stageKey = getStageKey(stage);
+         if (stageKey && currentScanState.stages[stageKey]) {
+           return '<i class="fas fa-check"></i>';
+         }
+         
+         return getDefaultIcon(stage);
+       }
+
+       function getDefaultIcon(stage) {
+         switch (stage) {
+           case 'initializing':
+             return '<i class="fas fa-cog"></i>';
+           case 'packaging':
+             return '<i class="fas fa-box"></i>';
+           case 'uploading':
+             return '<i class="fas fa-upload"></i>';
+           case 'scanning':
+             return '<i class="fas fa-search"></i>';
+           default:
+             return '<i class="fas fa-circle"></i>';
+         }
+       }
+
+      function updateTerminalOutput() {
+        const terminalOutput = document.getElementById('terminalOutput');
+        if (terminalOutput && currentScanState.output && currentScanState.output.length > 0) {
+          terminalOutput.innerHTML = currentScanState.output
+            .map(line => `<div class="terminal-line">${escapeHtml(line)}</div>`)
+            .join('');
+          terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        }
+      }
+
+      function getTerminalOutputHTML() {
+        if (!currentScanState.output || currentScanState.output.length === 0) {
+          return '';
+        }
+        
+        return `
+          <div class="terminal-output">
+            <div class="terminal-header">
+              <div class="terminal-title">
+                <i class="fas fa-terminal"></i>&nbsp;Scan Output
+              </div>
+            </div>
+            <div class="terminal-content" id="terminalOutput">
+              ${currentScanState.output.map(line => `<div class="terminal-line">${escapeHtml(line)}</div>`).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+             function escapeHtml(text) {
+         const div = document.createElement('div');
+         div.textContent = text;
+         return div.innerHTML;
+       }
+
+       function updateStepperSelectively() {
+         const currentStages = currentScanState.stages;
+         const previousStages = previousScanState?.stages;
+         
+         // Check if any stage completion status changed
+         let hasChanged = false;
+         if (!previousStages || 
+             currentStages.init !== previousStages.init ||
+             currentStages.package !== previousStages.package ||
+             currentStages.upload !== previousStages.upload ||
+             currentStages.scan !== previousStages.scan) {
+           hasChanged = true;
+         }
+         
+         // Only update if stages changed
+         if (hasChanged) {
+           const steps = document.querySelectorAll('.step');
+           steps.forEach((step, index) => {
+             const stages = ['initializing', 'packaging', 'uploading', 'scanning'];
+             const stage = stages[index];
+             
+             const newClass = getStepClass(stage);
+             const newIcon = getStepIcon(stage);
+             
+             // Update class
+             step.className = `step ${newClass}`;
+             
+             // Update icon
+             const iconElement = step.querySelector('.step-icon');
+             if (iconElement) {
+               iconElement.innerHTML = newIcon;
+             }
+           });
+         }
+       }
+
+       function updateProgressTextSelectively() {
+         const progressTextElement = document.querySelector('.progress-text');
+         if (!progressTextElement) return;
+
+         const currentProgress = getCurrentFilteredProgress();
+         const previousProgress = getPreviousFilteredProgress();
+         
+         if (!currentProgress && !previousProgress) return;
+         
+         const currentMessage = currentProgress ? currentProgress.message : '';
+         const previousMessage = previousProgress ? previousProgress.message : '';
+         
+         if (currentMessage !== previousMessage) {
+           progressTextElement.textContent = currentMessage;
+         }
+       }
+
+       function updateProgressBarSelectively() {
+         const progressBarElement = document.querySelector('.progress-fill');
+         const progressPercentageElement = document.querySelector('.progress-percentage');
+         
+         if (!progressBarElement || !progressPercentageElement) return;
+
+         const currentProgress = getCurrentFilteredProgress();
+         const previousProgress = getPreviousFilteredProgress();
+         
+         const currentPercentage = currentProgress ? currentProgress.percentage : undefined;
+         const previousPercentage = previousProgress ? previousProgress.percentage : undefined;
+         
+         if (currentPercentage !== previousPercentage) {
+           if (currentPercentage !== undefined) {
+             progressBarElement.style.width = `${currentPercentage}%`;
+             progressPercentageElement.textContent = `${currentPercentage.toFixed(1)}%`;
+           }
+         }
+       }
+
+       function updateActionButtonsSelectively() {
+         const actionsContainer = document.querySelector('.scanning-actions');
+         if (!actionsContainer) return;
+
+         const currentHasUrl = !!currentScanState.scanUrl;
+         const previousHasUrl = !!previousScanState.scanUrl;
+         
+         if (currentHasUrl !== previousHasUrl) {
+           // Re-render action buttons only if URL availability changed
+           actionsContainer.innerHTML = `
+             ${currentScanState.scanUrl ? `
+               <button class="btn btn-primary me-2" onclick="openScanUrl()">
+                 <i class="fas fa-external-link-alt"></i>&nbsp;View in Corgea
+               </button>
+             ` : ''}
+             <button class="btn btn-secondary" onclick="cancelScan()">
+               <i class="fas fa-times"></i>&nbsp;Cancel Scan
+             </button>
+           `;
+         }
+       }
+
+       function ensureTerminalOutputExists() {
+         // Check if terminal output container exists, if not create it
+         let terminalContainer = document.querySelector('.terminal-output');
+         if (!terminalContainer && currentScanState.output && currentScanState.output.length > 0) {
+           const scanningContainer = document.querySelector('.scanning-container');
+           if (scanningContainer) {
+             const terminalHTML = getTerminalOutputHTML();
+             scanningContainer.insertAdjacentHTML('beforeend', terminalHTML);
+           }
+         }
+       }
+
+       function updateTerminalOutputSelectively() {
+         let terminalOutput = document.getElementById('terminalOutput');
+         
+         const currentOutputLength = currentScanState.output ? currentScanState.output.length : 0;
+         const previousOutputLength = previousScanState && previousScanState.output ? previousScanState.output.length : 0;
+         
+         // If terminal doesn't exist but we have output, create it
+         if (!terminalOutput && currentOutputLength > 0) {
+           ensureTerminalOutputExists();
+           terminalOutput = document.getElementById('terminalOutput');
+         }
+
+         if (!terminalOutput) return;
+
+         // Only update if new output was added
+         if (currentOutputLength > previousOutputLength) {
+           // Append only new lines instead of replacing all
+           const newLines = currentScanState.output.slice(previousOutputLength);
+           newLines.forEach(line => {
+             const cleanLine = cleanAnsiSequences(line);
+             
+             // Check if this is a timer line using the helper function
+             if (isLastLineTimer(cleanLine)) {
+               // Check if the last line in terminal is also a timer line
+               const lastLineElement = terminalOutput.lastElementChild;
+               if (lastLineElement && isLastLineTimer(lastLineElement.textContent)) {
+                 // Replace the last timer line with the new one
+                 lastLineElement.textContent = cleanLine;
+               } else {
+                 // Add new timer line
+                 const lineElement = document.createElement('div');
+                 lineElement.className = 'terminal-line';
+                 lineElement.textContent = cleanLine;
+                 terminalOutput.appendChild(lineElement);
+               }
+             } else {
+               // Regular line, just append
+               const lineElement = document.createElement('div');
+               lineElement.className = 'terminal-line';
+               lineElement.textContent = cleanLine;
+               terminalOutput.appendChild(lineElement);
+             }
+           });
+           
+           terminalOutput.scrollTop = terminalOutput.scrollHeight;
+         }
+       }
+
+       function cleanAnsiSequences(text) {
+         // Remove ANSI escape sequences for display
+         return text.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '')
+                   .replace(/\x1b\[[0-9;]*m/g, '')
+                   .replace(/\[[0-9;]*m/g, '');
+       }
+
+       function isLastLineTimer(text) {
+         // Check if text contains timer pattern like "(2020s)"
+         return /\([^)]*s\)/.test(text);
+       }
+
+       function getCurrentFilteredProgress() {
+         if (!currentScanState.progress || currentScanState.progress.length === 0) return null;
+         const filtered = currentScanState.progress.filter(p => p.stage !== 'url_ready');
+         return filtered.length > 0 ? filtered[filtered.length - 1] : null;
+       }
+
+       function getPreviousFilteredProgress() {
+         if (!previousScanState || !previousScanState.progress || previousScanState.progress.length === 0) return null;
+         const filtered = previousScanState.progress.filter(p => p.stage !== 'url_ready');
+         return filtered.length > 0 ? filtered[filtered.length - 1] : null;
+       }
+
+       // Auto-refresh and scanning mode functions
+       function enterScanningMode(autoRefreshEnabled) {
+         isInScanningMode = true;
+         updateHeaderButtons();
+         updateAutoRefreshButton(autoRefreshEnabled);
+       }
+
+       function exitScanningMode() {
+         isInScanningMode = false;
+         updateHeaderButtons();
+       }
+
+       function updateHeaderButtons() {
+         const headerActions = document.querySelector('.header-actions');
+         if (!headerActions) return;
+
+         if (isInScanningMode) {
+           headerActions.innerHTML = `
+             <vscode-button id="autoRefreshBtn" appearance="secondary" onclick="toggleAutoRefresh()">
+               <i class="fas fa-sync-alt"></i>&nbsp;Auto-refresh
+             </vscode-button>
+           `;
+         } else {
+           headerActions.innerHTML = `
+             <vscode-button appearance="secondary" onclick="refresh()">
+               <i class="fas fa-refresh"></i>
+             </vscode-button>
+           `;
+         }
+       }
+
+       function updateAutoRefreshButton(enabled) {
+         const autoRefreshBtn = document.getElementById('autoRefreshBtn');
+         if (!autoRefreshBtn) return;
+
+         if (enabled) {
+           autoRefreshBtn.classList.add('auto-refresh-enabled');
+           const icon = autoRefreshBtn.querySelector('i');
+           if (icon) {
+             icon.classList.add('fa-spin');
+           }
+         } else {
+           autoRefreshBtn.classList.remove('auto-refresh-enabled');
+           const icon = autoRefreshBtn.querySelector('i');
+           if (icon) {
+             icon.classList.remove('fa-spin');
+           }
+         }
+       }
+
+       function updateVulnerabilityLists(data) {
+         // Update global vulnerability data
+         vulnerabilitiesData = data.vulnerabilities || [];
+         scaVulnerabilitiesData = data.scaVulnerabilities || [];
+
+         // Update code vulnerabilities list
+         updateCodeVulnerabilityList(data);
+         
+         // Update SCA vulnerabilities list
+         updateSCAVulnerabilityList(data);
+         
+         // Update tab badges
+         updateTabBadges(data);
+       }
+
+       function updateCodeVulnerabilityList(data) {
+         const container = document.getElementById('codeVulnerabilityListContainer');
+         if (!container) return;
+
+         if (data.hasVulnerabilities) {
+           container.innerHTML = renderCodeVulnerabilityList(data.fileGroups, data.vulnerabilities);
+         } else if (isInScanningMode) {
+           container.innerHTML = renderScanningEmptyState();
+         } else {
+           container.innerHTML = renderCodeEmptyState();
+         }
+
+         // Reinitialize severity badges and auto-expand logic
+         initializeVulnerabilityDisplay();
+       }
+
+       function updateSCAVulnerabilityList(data) {
+         const container = document.getElementById('scaVulnerabilityListContainer');
+         if (!container) return;
+
+         if (data.hasSCAVulnerabilities) {
+           container.innerHTML = renderSCAVulnerabilityList(data.packageGroups, data.scaVulnerabilities);
+         } else if (isInScanningMode) {
+           container.innerHTML = renderScanningEmptyState();
+         } else {
+           container.innerHTML = renderSCAEmptyState();
+         }
+
+         // Reinitialize severity badges and auto-expand logic
+         initializeVulnerabilityDisplay();
+       }
+
+       function updateTabBadges(data) {
+         // Update code tab badge
+         const codeTab = document.getElementById('code-tab');
+         const codeTabBadge = codeTab ? codeTab.querySelector('.count-badge') : null;
+         if (codeTabBadge) {
+           if (data.hasVulnerabilities) {
+             codeTabBadge.textContent = data.vulnerabilities.length;
+             codeTabBadge.style.display = '';
+           } else {
+             codeTabBadge.style.display = 'none';
+           }
+         } else if (data.hasVulnerabilities && codeTab) {
+           const badge = document.createElement('span');
+           badge.className = 'count-badge';
+           badge.textContent = data.vulnerabilities.length;
+           codeTab.appendChild(badge);
+         }
+
+         // Update SCA tab badge
+         const scaTab = document.getElementById('sca-tab');
+         const scaTabBadge = scaTab ? scaTab.querySelector('.count-badge') : null;
+         if (scaTabBadge) {
+           if (data.hasSCAVulnerabilities) {
+             scaTabBadge.textContent = data.scaVulnerabilities.length;
+             scaTabBadge.style.display = '';
+           } else {
+             scaTabBadge.style.display = 'none';
+           }
+         } else if (data.hasSCAVulnerabilities && scaTab) {
+           const badge = document.createElement('span');
+           badge.className = 'count-badge';
+           badge.textContent = data.scaVulnerabilities.length;
+           scaTab.appendChild(badge);
+         }
+       }
+
+       // Render functions for vulnerability lists
+       function renderCodeVulnerabilityList(fileGroups, vulnerabilities) {
+         if (!fileGroups || fileGroups.length === 0) {
+           return renderCodeEmptyState();
+         }
+
+         let html = '<div class="accordion" id="codeAccordion">';
+         
+         fileGroups.forEach(fileGroup => {
+           html += `
+             <div class="accordion-item">
+               <h2 class="accordion-header" id="code-heading-${fileGroup.index}">
+                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#code-collapse-${fileGroup.index}" aria-expanded="false" aria-controls="code-collapse-${fileGroup.index}">
+                   <div class="file-path">
+                     <i class="fas fa-file-code file-icon"></i>
+                     <span>${escapeHtml(fileGroup.path)}</span>
+                     <span class="count-badge">${fileGroup.vulnerabilities.length}</span>
+                   </div>
+                 </button>
+               </h2>
+               <div class="accordion-collapse collapse" id="code-collapse-${fileGroup.index}" aria-labelledby="code-heading-${fileGroup.index}" data-bs-parent="#codeAccordion">
+                 <div class="accordion-body">`;
+         
+           fileGroup.vulnerabilities.forEach(vuln => {
+             const severityDisplay = getSeverityDisplay(vuln.urgency);
+             html += `
+               <div class="vulnerability-item" data-vuln-id="${vuln.id}" onclick="showVulnerabilityDetails('${vuln.id}')">
+                 <div class="vuln-info">
+                   <div class="vuln-name">${escapeHtml(vuln.classification ? vuln.classification.name : 'Unknown Vulnerability')}</div>
+                   <div class="vuln-details">
+                     <span class="line-number">Line #${vuln.location.line_number}</span>
+                     <span>Status: ${escapeHtml(vuln.status)}</span>
+                   </div>
+                 </div>
+                 <div class="severity-badge ${severityDisplay}" data-original-severity="${vuln.urgency}">${severityDisplay}</div>
+               </div>`;
+           });
+         
+           html += `
+                 </div>
+               </div>
+             </div>`;
+         });
+         
+         html += '</div>';
+         return html;
+       }
+
+       function renderSCAVulnerabilityList(packageGroups, scaVulnerabilities) {
+         if (!packageGroups || packageGroups.length === 0) {
+           return renderSCAEmptyState();
+         }
+
+         let html = '<div class="accordion" id="scaAccordion">';
+         
+         packageGroups.forEach(packageGroup => {
+           html += `
+             <div class="accordion-item">
+               <h2 class="accordion-header" id="sca-heading-${packageGroup.index}">
+                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sca-collapse-${packageGroup.index}" aria-expanded="false" aria-controls="sca-collapse-${packageGroup.index}">
+                   <div class="package-name">
+                     <i class="fas fa-cube package-icon"></i>
+                     <span>${escapeHtml(packageGroup.name)}</span>
+                     <span class="count-badge">${packageGroup.vulnerabilities.length}</span>
+                   </div>
+                 </button>
+               </h2>
+               <div class="accordion-collapse collapse" id="sca-collapse-${packageGroup.index}" aria-labelledby="sca-heading-${packageGroup.index}" data-bs-parent="#scaAccordion">
+                 <div class="accordion-body">`;
+         
+           packageGroup.vulnerabilities.forEach(vuln => {
+             const severityDisplay = getSeverityDisplay(vuln.severity);
+             html += `
+               <div class="vulnerability-item" data-sca-vuln-id="${vuln.id}" onclick="showSCAVulnerabilityDetails('${vuln.id}')">
+                 <div class="vuln-info">
+                   <div class="vuln-name">${escapeHtml(vuln.cve)}</div>
+                   <div class="vuln-details">
+                     <span>Fixed in version ${escapeHtml(vuln.package.fix_version)}</span>
+                     <span>${escapeHtml(vuln.package.ecosystem)}</span>
+                   </div>
+                 </div>
+                 <div class="severity-badge ${severityDisplay}" data-original-severity="${vuln.severity}">${severityDisplay}</div>
+               </div>`;
+           });
+         
+           html += `
+                 </div>
+               </div>
+             </div>`;
+         });
+         
+         html += '</div>';
+         return html;
+       }
+
+       function renderCodeEmptyState() {
+         return `
+           <div class="empty-state">
+             <div class="empty-icon">📝</div>
+             <div>No code vulnerabilities found in this project</div>
+             <p class="text-muted mt-2">Your code appears to be secure! Check the Dependencies tab for any potential supply chain vulnerabilities.</p>
+           </div>`;
+       }
+
+       function renderSCAEmptyState() {
+         return `
+           <div class="empty-state">
+             <div class="empty-icon">📦</div>
+             <div>No dependency vulnerabilities found in this project</div>
+             <p class="text-muted mt-2">Your dependencies are up to date and secure! Check the Code tab for any potential code-level vulnerabilities.</p>
+           </div>`;
+       }
+
+       function renderScanningEmptyState() {
+         return `
+           <div class="empty-state">
+             <div class="empty-icon">🔍</div>
+             <div>No results found yet, hang tight...</div>
+             <p class="text-muted mt-2">Scan is in progress. Vulnerabilities will appear here as they are discovered.</p>
+           </div>`;
+       }
+
+       function initializeVulnerabilityDisplay() {
+         // Normalize severity badges
+         const severityBadges = document.querySelectorAll('.severity-badge[data-original-severity]');
+         severityBadges.forEach(badge => {
+           const originalSeverity = badge.getAttribute('data-original-severity');
+           const normalizedSeverity = getSeverityDisplay(originalSeverity);
+           badge.textContent = normalizedSeverity;
+           
+           // Update the CSS class to use normalized severity for consistent styling
+           badge.className = badge.className.replace(originalSeverity, normalizedSeverity);
+         });
+         
+         // Auto-expand first accordion item if only one file/package
+         const codeAccordion = document.getElementById('codeAccordion');
+         if (codeAccordion && codeAccordion.children.length === 1) {
+           const firstItem = codeAccordion.querySelector('.accordion-button');
+           if (firstItem) {
+             firstItem.click();
+           }
+         }
+         
+         const scaAccordion = document.getElementById('scaAccordion');
+         if (scaAccordion && scaAccordion.children.length === 1) {
+           const firstItem = scaAccordion.querySelector('.accordion-button');
+           if (firstItem) {
+             firstItem.click();
+           }
+         }
+       }
+
       
       function showVulnerabilityDetails(vulnId) {
         const vulnerability = vulnerabilitiesData.find(v => v.id === vulnId);
@@ -536,30 +1669,37 @@ html
       
       // Auto-expand first accordion item if only one file/package
       document.addEventListener('DOMContentLoaded', function() {
-        // Normalize severity badges
-        const severityBadges = document.querySelectorAll('.severity-badge[data-original-severity]');
-        severityBadges.forEach(badge => {
-          const originalSeverity = badge.getAttribute('data-original-severity');
-          const normalizedSeverity = getSeverityDisplay(originalSeverity);
-          badge.textContent = normalizedSeverity;
-          
-          // Update the CSS class to use normalized severity for consistent styling
-          badge.className = badge.className.replace(originalSeverity, normalizedSeverity);
-        });
-        
-        const codeAccordion = document.getElementById('codeAccordion');
-        if (codeAccordion && codeAccordion.children.length === 1) {
-          const firstItem = codeAccordion.querySelector('.accordion-button');
-          if (firstItem) {
-            firstItem.click();
-          }
+        // Initialize vulnerability display
+        initializeVulnerabilityDisplay();
+
+        // Auto-scroll terminal output to bottom
+        const terminalOutput = document.getElementById('terminalOutput');
+        if (terminalOutput) {
+          terminalOutput.scrollTop = terminalOutput.scrollHeight;
         }
-        
-        const scaAccordion = document.getElementById('scaAccordion');
-        if (scaAccordion && scaAccordion.children.length === 1) {
-          const firstItem = scaAccordion.querySelector('.accordion-button');
-          if (firstItem) {
-            firstItem.click();
-          }
+
+        // Initialize scanning tab based on initial state
+        if (currentScanState.isScanning) {
+          updateScanningTabIndicator();
+        }
+
+        // Initialize scanning mode if applicable
+        if (isInScanningMode) {
+          updateHeaderButtons();
+        }
+
+        // Add tab switch listener to update content when scanning tab becomes active
+        const scanningTabButton = document.getElementById('scanning-tab');
+        if (scanningTabButton) {
+          scanningTabButton.addEventListener('click', function() {
+            // Small delay to ensure tab content is visible
+            setTimeout(() => {
+              if (!previousScanState) {
+                updateScanningTabContent();
+              } else {
+                updateScanningTabContentSelectively();
+              }
+            }, 50);
+          });
         }
       }); 

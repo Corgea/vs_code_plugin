@@ -3,8 +3,12 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-  padding-bottom: 12px;
+  padding: 12px 0;
   border-bottom: 1px solid var(--vscode-panel-border);
+  position: sticky;
+  background-color: var(--vscode-editor-background);
+  top: 0;
+  z-index: 10;
 }
 
 .header-left {

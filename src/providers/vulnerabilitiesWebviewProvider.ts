@@ -299,10 +299,17 @@ export default class VulnerabilitiesWebviewProvider implements vscode.WebviewVie
       vscode.Uri.joinPath(this._extensionUri, "images", "logo.png")
     );
 
+    const bundleUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this._extensionUri, "assets", "bundles", "vulnerabilities.mjs")
+    );
+
+    const bundleStyleUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this._extensionUri, "assets", "bundles", "style.css")
+    );
+
     const isAuthenticated = await StorageManager.getValue<boolean>(StorageKeys.isLoggedIn);
     const hasVulnerabilities = this._vulnerabilities.length > 0;
     const hasSCAVulnerabilities = this._scaVulnerabilities.length > 0;
-
 
     // Group vulnerabilities by file
     const fileGroups = hasVulnerabilities ? this._groupVulnerabilitiesByFile() : [];
@@ -310,10 +317,13 @@ export default class VulnerabilitiesWebviewProvider implements vscode.WebviewVie
     // Group SCA vulnerabilities by package
     const packageGroups = hasSCAVulnerabilities ? this._groupSCAVulnerabilitiesByPackage() : [];
 
-    return ViewsManager.render(Views.VulnerabilitiesList, {
+    // Use React-based HTML template
+    return this._getReactHtmlTemplate({
       cspSource: webview.cspSource,
       styleURI: styleMainUri.toString(),
+      bundleStyleURI: bundleStyleUri.toString(),
       logoURI: logoUri.toString(),
+      bundleURI: bundleUri.toString(),
       isLoading: this._isLoading,
       isAuthenticated,
       hasVulnerabilities,
@@ -327,6 +337,51 @@ export default class VulnerabilitiesWebviewProvider implements vscode.WebviewVie
       isInScanningMode: this._isInScanningMode,
       autoRefreshEnabled: this._autoRefreshEnabled,
     });
+  }
+
+  private _getReactHtmlTemplate(data: any): string {
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${data.cspSource} https: data:; style-src 'unsafe-inline' https://cdn.jsdelivr.net ${data.cspSource} https://cdnjs.cloudflare.com; script-src 'unsafe-inline' https://cdn.jsdelivr.net ${data.cspSource}; font-src *;">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <link href="${data.styleURI}" rel="stylesheet">
+  <link href="${data.bundleStyleURI}" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@vscode/webview-ui-toolkit@latest/dist/toolkit.js"></script>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module" src="${data.bundleURI}"></script>
+  <script>
+    // Acquire VS Code API once and make it available globally
+    (function() {
+      if (!window.vscode) {
+        window.vscode = acquireVsCodeApi();
+      }
+    })();
+    
+    // Pass initial data to React app
+    window.initialData = {
+      logoURI: '${data.logoURI}',
+      isLoading: ${data.isLoading},
+      isAuthenticated: ${data.isAuthenticated},
+      projectNotFound: ${data.projectNotFound},
+      vulnerabilities: ${JSON.stringify(data.vulnerabilities)},
+      scaVulnerabilities: ${JSON.stringify(data.scaVulnerabilities)},
+      fileGroups: ${JSON.stringify(data.fileGroups)},
+      packageGroups: ${JSON.stringify(data.packageGroups)},
+      hasVulnerabilities: ${data.hasVulnerabilities},
+      hasSCAVulnerabilities: ${data.hasSCAVulnerabilities},
+      scanState: ${JSON.stringify(data.scanState)},
+      isInScanningMode: ${data.isInScanningMode},
+      autoRefreshEnabled: ${data.autoRefreshEnabled}
+    };
+  </script>
+</body>
+</html>`;
   }
 
   private _groupVulnerabilitiesByFile() {

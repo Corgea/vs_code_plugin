@@ -7,7 +7,7 @@ let isSentryAvailable = false;
 try {
     Sentry = require("@sentry/node");
     Sentry.init({
-        dsn: "https://6b945425507c8f886116bc2e31c7fff0@o1090762.ingest.us.sentry.io/4509728580960256",
+        dsn: "DSN",
         // Setting this option to true will send default PII data to Sentry.
         // For example, automatic IP address collection on events
         sendDefaultPii: true,

@@ -1,0 +1,34 @@
+.terminal-output {
+  margin-top: 20px;
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.terminal-header {
+  background: var(--vscode-list-hoverBackground);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.terminal-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+}
+
+.terminal-content {
+  background: var(--vscode-textCodeBlock-background);
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 12px;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.terminal-line {
+  color: var(--vscode-foreground);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}

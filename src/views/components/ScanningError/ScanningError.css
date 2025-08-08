@@ -1,0 +1,16 @@
+.scanning-error {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.error-icon i {
+  font-size: 48px;
+  margin-bottom: 16px;
+  color: #f85149;
+}
+
+.error-message {
+  font-size: 14px;
+  color: var(--vscode-foreground);
+  margin-bottom: 16px;
+}

@@ -5,11 +5,7 @@ import * as vscode from "vscode";
 export enum Views {
   VulnerabilityDetails = "vulnerabilityDetails.pug",
   SCAVulnerabilityDetails = "scaVulnerabilityDetails.pug",
-  VulnerabilitiesList = "vulnerabilitiesList.pug",
   GenericError = "genericError.pug",
-  CodeVulnerabilityList = "codeVulnerabilityList.pug",
-  SCAVulnerabilityList = "scaVulnerabilityList.pug",
-  ScanningEmptyState = "scanningEmptyState.pug",
 }
 
 export default class ViewsManager {

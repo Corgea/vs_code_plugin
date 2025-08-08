@@ -1,0 +1,36 @@
+/* Override Bootstrap tabs to match original Pug styling exactly */
+.nav-tabs {
+  border-bottom: 1px solid var(--vscode-panel-border);
+  margin-bottom: 20px;
+}
+
+.nav-tabs .nav-link {
+  color: var(--vscode-descriptionForeground);
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  padding: 8px 16px;
+  transition: all 0.2s;
+}
+
+.nav-tabs .nav-link:hover {
+  color: var(--vscode-foreground);
+  border-bottom-color: var(--corgea-orange);
+}
+
+.nav-tabs .nav-link.active {
+  color: var(--vscode-foreground);
+  border-bottom-color: var(--corgea-orange);
+  background: none;
+}
+
+.count-badge {
+  background: var(--corgea-orange);
+  color: #ffffff;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}

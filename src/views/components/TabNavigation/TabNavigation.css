@@ -1,7 +1,47 @@
-/* Override Bootstrap tabs to match original Pug styling exactly */
-.nav-tabs {
+/* Responsive tab navigation container */
+.tab-navigation-container {
+  position: relative;
+  width: 100%;
   border-bottom: 1px solid var(--vscode-panel-border);
   margin-bottom: 20px;
+}
+
+/* Scrollable tabs wrapper */
+.nav-tabs-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-tabs-scroll {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  border-bottom: none;
+}
+
+.nav-tabs-scroll::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Override Bootstrap tabs to match original Pug styling exactly */
+.nav-tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  border-bottom: none;
+  margin: 0;
+  padding: 0;
+  min-width: 100%;
+}
+
+.nav-item {
+  flex-shrink: 0;
+  display: flex;
 }
 
 .nav-tabs .nav-link {
@@ -11,6 +51,14 @@
   background: none;
   padding: 8px 16px;
   transition: all 0.2s;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  min-width: max-content;
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+  box-shadow: none;
 }
 
 .nav-tabs .nav-link:hover {
@@ -33,4 +81,146 @@
   font-weight: 600;
   margin-left: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Scroll indicators */
+.scroll-indicator {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 24px;
+  background: linear-gradient(90deg, var(--vscode-editor-background) 0%, transparent 100%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.scroll-indicator.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.scroll-indicator:hover {
+  background: linear-gradient(90deg, var(--vscode-editor-background) 20%, transparent 100%);
+}
+
+.scroll-indicator.left {
+  left: 0;
+  background: linear-gradient(90deg, var(--vscode-editor-background) 60%, transparent 100%);
+}
+
+.scroll-indicator.right {
+  right: 0;
+  background: linear-gradient(270deg, var(--vscode-editor-background) 60%, transparent 100%);
+}
+
+.scroll-indicator i {
+  color: var(--vscode-descriptionForeground);
+  font-size: 12px;
+  transition: color 0.2s ease;
+}
+
+.scroll-indicator:hover i {
+  color: var(--vscode-foreground);
+}
+
+/* Touch-friendly scroll for mobile */
+.nav-tabs-scroll {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Focus styles for accessibility */
+.nav-tabs .nav-link:focus {
+  outline: none;
+  box-shadow: none;
+  border: none;
+  border-bottom: 2px solid var(--corgea-orange);
+}
+
+.nav-tabs .nav-link:focus-visible {
+  outline: 2px solid var(--vscode-focusBorder);
+  outline-offset: 2px;
+}
+
+.nav-tabs .nav-link:active {
+  outline: none;
+  box-shadow: none;
+  border: none;
+  border-bottom: 2px solid var(--corgea-orange);
+}
+
+.scroll-indicator:focus {
+  outline: 2px solid var(--vscode-focusBorder);
+  outline-offset: 2px;
+}
+
+/* Improved scroll indicators for touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .scroll-indicator {
+    width: 32px;
+    opacity: 0.7;
+  }
+  
+  .scroll-indicator.visible {
+    opacity: 0.9;
+  }
+  
+  .scroll-indicator i {
+    font-size: 14px;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .nav-tabs .nav-link {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  
+  .count-badge {
+    padding: 1px 6px;
+    font-size: 10px;
+    margin-left: 6px;
+  }
+  
+  .scroll-indicator {
+    width: 28px;
+  }
+}
+
+@media (max-width: 400px) {
+  .nav-tabs .nav-link {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  
+  .nav-tabs .nav-link i {
+    font-size: 12px;
+  }
+  
+  .count-badge {
+    padding: 1px 4px;
+    font-size: 9px;
+    margin-left: 4px;
+  }
+  
+  .scroll-indicator {
+    width: 24px;
+  }
+}
+
+/* Ensure smooth transitions */
+.nav-tabs .nav-link,
+.scroll-indicator {
+  transition: all 0.2s ease;
+}
+
+/* Better visual feedback for active states */
+.scroll-indicator:active {
+  transform: scale(0.95);
 }

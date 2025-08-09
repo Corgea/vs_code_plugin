@@ -1,0 +1,23 @@
+.scanning-completed {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.completed-icon i {
+  font-size: 48px;
+  margin-bottom: 16px;
+  color: #3fb950;
+}
+
+.completed-message {
+  font-size: 14px;
+  color: var(--vscode-foreground);
+  margin-bottom: 16px;
+}
+
+.completed-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}

@@ -1,0 +1,8 @@
+.tabs-container {
+  width: 100%;
+  flex: 1;
+}
+
+.tab-content {
+  margin-top: 16px;
+}

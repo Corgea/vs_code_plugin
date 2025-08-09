@@ -1,0 +1,17 @@
+.scanning-idle {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.idle-icon i {
+  font-size: 48px;
+  margin-bottom: 16px;
+  color: var(--vscode-descriptionForeground);
+  opacity: 0.7;
+}
+
+.idle-message {
+  font-size: 14px;
+  color: var(--vscode-foreground);
+  margin-bottom: 16px;
+}

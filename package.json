@@ -3,7 +3,7 @@
   "displayName": "Corgea",
   "publisher": "Corgea",
   "description": "Corgea helps you automatically fix insecure code.",
-  "version": "1.1.4",
+  "version": "1.2.1",
   "icon": "images/logo.png",
   "engines": {
     "vscode": "^1.50.0"
@@ -82,9 +82,12 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run clean:react && npm run compile && npm run build:react",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
+    "build:react": "vite build",
+    "dev:react": "vite build --watch",
+    "clean:react": "powershell -Command \"Get-ChildItem -Path views -Include *.js,*.js.map -Recurse | Remove-Item -Force\" 2>nul || echo \"No React JS files to clean\"",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "vscode-test",
@@ -97,15 +100,20 @@
     "@types/mocha": "^10.0.6",
     "@types/node": "18.x",
     "@types/pug": "^2.0.10",
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.18",
     "@types/vscode": "^1.50.0",
     "@typescript-eslint/eslint-plugin": "^7.7.1",
     "@typescript-eslint/parser": "^7.7.1",
+    "@vitejs/plugin-react": "^4.2.1",
     "@vscode/test-cli": "^0.0.8",
     "@vscode/test-electron": "^2.3.9",
     "@vscode/vsce": "^3.2.1",
+    "concurrently": "^9.2.0",
     "eslint": "^8.57.0",
     "prettier": "^3.3.3",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "vite": "^5.0.10"
   },
   "dependencies": {
     "@sentry/node": "^8.0.0",
@@ -115,6 +123,7 @@
     "extract-zip": "^2.0.1",
     "pug": "^3.0.3",
     "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "simple-git": "^3.27.0",
     "tar": "^7.4.3",
     "tree-kill": "^1.2.2",

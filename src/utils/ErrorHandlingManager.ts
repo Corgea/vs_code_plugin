@@ -1,14 +1,22 @@
 import * as vscode from "vscode";
 
-// Sentry initialization
-const Sentry = require("@sentry/node");
+// Sentry initialization with error handling
+let Sentry: any = null;
+let isSentryAvailable = false;
 
-Sentry.init({
-  dsn: "DSN",
-  // Setting this option to true will send default PII data to Sentry.
-  // For example, automatic IP address collection on events
-  sendDefaultPii: true,
-});
+try {
+    Sentry = require("@sentry/node");
+    Sentry.init({
+        dsn: "DSN",
+        // Setting this option to true will send default PII data to Sentry.
+        // For example, automatic IP address collection on events
+        sendDefaultPii: true,
+    });
+    isSentryAvailable = true;
+} catch (error) {
+    console.warn("Sentry initialization failed:", error);
+    isSentryAvailable = false;
+}
 
 
 export default class ErrorHandlingManager {
@@ -81,17 +89,23 @@ export default class ErrorHandlingManager {
             console.error('Context:', context);
         }
 
-        // Capture exception in Sentry
-        Sentry.captureException(error, {
-            tags: {
-                method: context?.method || 'unknown',
-                className: context?.className || 'unknown'
-            },
-            extra: {
-                args: context?.args,
-                additionalData: context?.additionalData
+        // Capture exception in Sentry only if available
+        if (isSentryAvailable && Sentry) {
+            try {
+                Sentry.captureException(error, {
+                    tags: {
+                        method: context?.method || 'unknown',
+                        className: context?.className || 'unknown'
+                    },
+                    extra: {
+                        args: context?.args,
+                        additionalData: context?.additionalData
+                    }
+                });
+            } catch (sentryError) {
+                console.warn("Failed to capture exception in Sentry:", sentryError);
             }
-        });
+        }
 
         // Show user-friendly error message
         const errorMessage = context?.customErrorMessage || `An error occurred: ${error.message || 'Unknown error'}`;
@@ -113,16 +127,25 @@ export default class ErrorHandlingManager {
             additionalData?: any;
         }
     ) {
-        Sentry.captureMessage(message, {
-            level: level,
-            tags: {
-                method: context?.method || 'unknown',
-                className: context?.className || 'unknown'
-            },
-            extra: {
-                additionalData: context?.additionalData
+        if (isSentryAvailable && Sentry) {
+            try {
+                Sentry.captureMessage(message, {
+                    level: level,
+                    tags: {
+                        method: context?.method || 'unknown',
+                        className: context?.className || 'unknown'
+                    },
+                    extra: {
+                        additionalData: context?.additionalData
+                    }
+                });
+            } catch (sentryError) {
+                console.warn("Failed to capture message in Sentry:", sentryError);
             }
-        });
+        } else {
+            // Fallback to console logging when Sentry is not available
+            console.log(`[${level.toUpperCase()}] ${message}`, context);
+        }
     }
 
     /**
@@ -132,11 +155,17 @@ export default class ErrorHandlingManager {
      * @param username - Username
      */
     public static setUserContext(userId: string, email?: string, username?: string) {
-        Sentry.setUser({
-            id: userId,
-            email: email,
-            username: username
-        });
+        if (isSentryAvailable && Sentry) {
+            try {
+                Sentry.setUser({
+                    id: userId,
+                    email: email,
+                    username: username
+                });
+            } catch (sentryError) {
+                console.warn("Failed to set user context in Sentry:", sentryError);
+            }
+        }
     }
 
 
@@ -144,7 +173,13 @@ export default class ErrorHandlingManager {
      * Flush Sentry events (useful for ensuring events are sent before process exit)
      */
     public static async flush() {
-        await Sentry.flush(2000); // Wait up to 2 seconds for events to be sent
+        if (isSentryAvailable && Sentry) {
+            try {
+                await Sentry.flush(2000); // Wait up to 2 seconds for events to be sent
+            } catch (sentryError) {
+                console.warn("Failed to flush Sentry events:", sentryError);
+            }
+        }
     }
 }
 

@@ -1,0 +1,17 @@
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--vscode-foreground);
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-title {
+  color: var(--vscode-foreground);
+  font-weight: 500;
+  margin-bottom: 8px;
+}

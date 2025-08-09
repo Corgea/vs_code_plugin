@@ -1,0 +1,78 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  position: sticky;
+  background-color: var(--vscode-editor-background);
+  top: 0;
+  z-index: 10;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.auto-refresh-btn {
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  border: 1px solid var(--vscode-button-border);
+  padding: 6px 12px;
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.auto-refresh-btn:hover {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.auto-refresh-btn.auto-refresh-enabled {
+  background: #3fb950;
+  color: #ffffff;
+  border-color: #3fb950;
+}
+
+.auto-refresh-btn.auto-refresh-enabled:hover {
+  background: #2ea043;
+  border-color: #2ea043;
+}
+
+.refresh-btn {
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  border: 1px solid var(--vscode-button-border);
+  padding: 6px 12px;
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.refresh-btn:hover {
+  background: var(--vscode-button-secondaryHoverBackground);
+}

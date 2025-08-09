@@ -47,4 +47,9 @@ export default class WorkspaceManager {
     }
     return undefined;
   }
+
+  public static getExtensionVersion(): string {
+    const extension = vscode.extensions.getExtension("Corgea.corgea");
+    return extension?.packageJSON?.version || "unknown";
+  }
 }

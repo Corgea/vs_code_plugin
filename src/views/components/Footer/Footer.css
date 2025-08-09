@@ -1,0 +1,21 @@
+.footer {
+  color: #a0a0a0;
+  padding: 16px 20px;
+  text-align: center;
+  margin-top: auto;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.footer-text {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.heart {
+  color: #e91e63;
+  font-weight: bold;
+}

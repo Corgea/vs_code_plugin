@@ -4,6 +4,7 @@
   align-items: center;
   padding: 40px 20px;
   min-height: 300px;
+  flex: 1;
 }
 
 .no-project-card {

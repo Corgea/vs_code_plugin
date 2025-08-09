@@ -1,6 +1,7 @@
 .auth-container {
   text-align: center;
   padding: 40px 20px;
+  flex: 1;
 }
 
 .auth-message {

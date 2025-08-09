@@ -5,6 +5,7 @@ import LoadingSpinner from '../LoadingSpinner/LoadingSpinner';
 import AuthContainer from '../AuthContainer/AuthContainer';
 import NoProjectContainer from '../NoProjectContainer/NoProjectContainer';
 import TabsContainer from '../TabsContainer/TabsContainer';
+import Footer from '../Footer/Footer';
 import './VulnerabilitiesApp.css';
 
 const VulnerabilitiesApp: React.FC = () => {
@@ -15,6 +16,7 @@ const VulnerabilitiesApp: React.FC = () => {
       <div className="vulnerabilities-app">
         <Header />
         <LoadingSpinner />
+        <Footer />
       </div>
     );
   }
@@ -24,6 +26,7 @@ const VulnerabilitiesApp: React.FC = () => {
       <div className="vulnerabilities-app">
         <Header />
         <AuthContainer />
+        <Footer />
       </div>
     );
   }
@@ -33,6 +36,7 @@ const VulnerabilitiesApp: React.FC = () => {
       <div className="vulnerabilities-app">
         <Header />
         <NoProjectContainer />
+        <Footer />
       </div>
     );
   }
@@ -41,6 +45,7 @@ const VulnerabilitiesApp: React.FC = () => {
     <div className="vulnerabilities-app">
       <Header />
       <TabsContainer />
+      <Footer />
     </div>
   );
 };

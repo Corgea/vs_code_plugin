@@ -9,8 +9,9 @@ import StorageManager, {
   StorageKeys,
   StorageSecretKeys,
 } from "../utils/storageManager";
-import { withErrorHandling } from "../utils/ErrorHandlingManager";
+import ErrorHandlingManager, { withErrorHandling } from "../utils/ErrorHandlingManager";
 import EventsManager from "../utils/eventsManager";
+import WorkspaceManager from "../utils/workspaceManager";
 const kill = require('tree-kill');
 
 export interface ScanProgress {
@@ -88,10 +89,7 @@ export default class scanningService {
     EventsManager.emit("scan.started", scanningService._scanState);
 
     const contextUri = ContextManager.getContext().extensionUri;
-    const myVenvPath = vscode.Uri.joinPath(
-      contextUri,
-      "./assets/runtimes/python/myvenv",
-    );
+    const myVenvPath = scanningService.getVersionedVenvPath();
 
     try {
       // Ensure the virtual environment is set up
@@ -374,6 +372,7 @@ export default class scanningService {
       await vscode.workspace.fs.stat(
         vscode.Uri.joinPath(myVenvPath, `./python`),
       );
+      await vscode.workspace.fs.stat(scanningService.getVenvPythonExecutablePath());
     } catch (error) {
       let tarFileName = "";
       if (scanningService.getPlatform() === "windows") {
@@ -387,10 +386,20 @@ export default class scanningService {
       }
 
       const tarFilePath = vscode.Uri.joinPath(
-        contextUri,
-        `./assets/runtimes/python/${tarFileName}`,
+        scanningService.getPythonRuntimeBasePath(),
+        tarFileName,
       );
-      // create the directory if it doesn't exist
+      try {
+        await vscode.workspace.fs.delete(myVenvPath, { recursive: true });
+      } catch (deletionError) {
+        ErrorHandlingManager.handleError(deletionError, {
+          method: "scanningService.ensureVirtualEnvExists",
+          additionalData: {
+            myVenvPath: myVenvPath.fsPath,
+            tarFilePath: tarFilePath.fsPath,
+          }
+        });
+      }
       await vscode.workspace.fs.createDirectory(myVenvPath);
       try {
         const tar = require("tar");
@@ -408,26 +417,7 @@ export default class scanningService {
   }
 
   private static getPythonPath(): vscode.Uri | null {
-    const contextUri = ContextManager.getContext().extensionUri;
-
-    if (os.platform() === "win32") {
-      return vscode.Uri.joinPath(
-        contextUri,
-        "./assets/runtimes/python/myvenv/python/python.exe",
-      );
-    } else if (os.platform() === "darwin") {
-      return vscode.Uri.joinPath(
-        contextUri,
-        "./assets/runtimes/python/myvenv/python/bin/python",
-      );
-    } else if (os.platform() === "linux") {
-      return vscode.Uri.joinPath(
-        contextUri,
-        "./assets/runtimes/python/myvenv/python/bin/python",
-      );
-    }
-
-    return null;
+    return scanningService.getVenvPythonExecutablePath();
   }
 
   private static getCorgeaPath(): vscode.Uri | null {
@@ -481,6 +471,38 @@ export default class scanningService {
       return "linux";
     }
     return "";
+  }
+
+  /**
+   * Gets the base Python runtime path
+   */
+  private static getPythonRuntimeBasePath(): vscode.Uri {
+    const contextUri = ContextManager.getContext().extensionUri;
+    return vscode.Uri.joinPath(contextUri, "./assets/runtimes/python");
+  }
+
+  /**
+   * Gets the versioned virtual environment path
+   */
+  private static getVersionedVenvPath(): vscode.Uri {
+    return vscode.Uri.joinPath(
+      this.getPythonRuntimeBasePath(),
+      "myvenv",
+      `version_${WorkspaceManager.getExtensionVersion() || "default"}`
+    );
+  }
+
+  /**
+   * Gets the Python executable path for the virtual environment
+   */
+  private static getVenvPythonExecutablePath(): vscode.Uri {
+    const venvPath = this.getVersionedVenvPath();
+    
+    if (os.platform() === "win32") {
+      return vscode.Uri.joinPath(venvPath, "python/python.exe");
+    } else {
+      return vscode.Uri.joinPath(venvPath, "python/bin/python");
+    }
   }
 
   public static activate() {}

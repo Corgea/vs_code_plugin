@@ -86,7 +86,8 @@ button {
   color: #fff;
 }
 
-.CRITICAL {
+.CRITICAL,
+.CR {
   background: #c30000;
   color: #fff;
 }
@@ -106,6 +107,11 @@ button {
 .LOW {
   background: #fff700;
   color: #333;
+}
+
+.UN {
+  background: #373737;
+  color: #fff;
 }
 
 .fix_explanation,

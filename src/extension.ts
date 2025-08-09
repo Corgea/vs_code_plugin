@@ -18,7 +18,8 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Registering Providers
   providers.forEach((provider) => {
-    vscode.window.registerTreeDataProvider(provider.viewName, new provider());
+    // Register webview provider
+    vscode.window.registerWebviewViewProvider(provider.viewType, new provider(context.extensionUri));
   });
 
   // Registering Events

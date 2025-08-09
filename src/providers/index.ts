@@ -1,3 +1,3 @@
-import VulnerabilitiesProvider from "./vulnerabilitiesProvider";
+import VulnerabilitiesWebviewProvider from "./vulnerabilitiesWebviewProvider";
 
-export default [VulnerabilitiesProvider];
+export default [VulnerabilitiesWebviewProvider];

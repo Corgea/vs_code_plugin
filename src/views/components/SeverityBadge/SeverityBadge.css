@@ -1,0 +1,33 @@
+.severity-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.severity-badge.cr {
+  background-color: #dc3545;
+  color: #ffffff;
+}
+
+.severity-badge.hi {
+  background-color: #fd7e14;
+  color: #ffffff;
+}
+
+.severity-badge.me {
+  background-color: #ffc107;
+  color: #000000;
+}
+
+.severity-badge.lo {
+  background-color: #28a745;
+  color: #ffffff;
+}
+
+.severity-badge.un {
+  background-color: #6c757d;
+  color: #ffffff;
+}

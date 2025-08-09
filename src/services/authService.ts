@@ -6,6 +6,7 @@ import StorageManager, {
 import APIManager from "../utils/apiManager";
 import EventsManager from "../utils/eventsManager";
 import { OnCommand } from "../utils/commandsManager";
+import { withErrorHandling } from "../utils/ErrorHandlingManager";
 
 export default class AuthService {
   @OnCommand("corgea.logout")
@@ -20,6 +21,7 @@ export default class AuthService {
   }
 
   @OnCommand("corgea.setApiKey")
+  @withErrorHandling()
   public static async setApiKey(): Promise<void> {
     const corgeaUrl = await vscode.window.showInputBox({
       value: "https://www.corgea.app",

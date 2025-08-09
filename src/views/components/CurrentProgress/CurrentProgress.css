@@ -1,0 +1,38 @@
+.current-progress {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.progress-text {
+  font-size: 14px;
+  color: var(--vscode-foreground);
+  margin-bottom: 10px;
+}
+
+.progress-bar-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+}
+
+.progress-bar {
+  width: 200px;
+  height: 6px;
+  background: var(--vscode-panel-border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--corgea-orange);
+  transition: width 0.3s ease;
+}
+
+.progress-percentage {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+  min-width: 40px;
+}

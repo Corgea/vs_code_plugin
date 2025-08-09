@@ -1,0 +1,71 @@
+.progress-steps {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.progress-steps::before {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--vscode-panel-border);
+  z-index: 1;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+  flex: 1;
+}
+
+.step-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--vscode-button-secondaryBackground);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  transition: all 0.3s;
+}
+
+.step.active .step-icon {
+  background: var(--corgea-orange);
+  color: white;
+  animation: pulse-glow 2s infinite;
+}
+
+.step.completed .step-icon {
+  background: #3fb950;
+  color: white;
+}
+
+.step-text {
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+  text-align: center;
+}
+
+.step.active .step-text {
+  color: var(--vscode-foreground);
+  font-weight: 600;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 rgba(245, 108, 38, 0.7);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 0 0 10px rgba(245, 108, 38, 0);
+    transform: scale(1.05);
+  }
+}

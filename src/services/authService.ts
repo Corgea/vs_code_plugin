@@ -37,7 +37,14 @@ export default class AuthService {
     }
 
     if (corgeaUrl) {
-      StorageManager.setValue(StorageKeys.corgeaUrl, corgeaUrl);
+      let fixedUrl = corgeaUrl;
+      if (!fixedUrl.includes("http")) {
+        fixedUrl = `https://${fixedUrl}`;
+      }
+      if (fixedUrl.endsWith("/")) {
+        fixedUrl = fixedUrl.slice(0, -1);
+      }
+      StorageManager.setValue(StorageKeys.corgeaUrl, fixedUrl);
     }
 
     const apiKey = await vscode.window.showInputBox({
@@ -72,5 +79,5 @@ export default class AuthService {
     }
   }
 
-  public static activate() {}
+  public static activate() { }
 }

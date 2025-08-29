@@ -62,8 +62,10 @@ export interface PackageGroup {
 
 export interface VulnerabilitiesState {
   isLoading: boolean;
+  isOAuthLoading: boolean;
   isAuthenticated: boolean;
   projectNotFound: boolean;
+  showEnterpriseForm: boolean;
   vulnerabilities: Vulnerability[];
   scaVulnerabilities: SCAVulnerability[];
   fileGroups: FileGroup[];
@@ -78,7 +80,9 @@ export interface VulnerabilitiesState {
 
 type VulnerabilitiesAction =
   | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SET_OAUTH_LOADING'; payload: boolean }
   | { type: 'SET_AUTHENTICATION'; payload: boolean }
+  | { type: 'SET_SHOW_ENTERPRISE_FORM'; payload: boolean }
   | { type: 'SET_PROJECT_NOT_FOUND'; payload: boolean }
   | { type: 'SET_VULNERABILITIES'; payload: { vulnerabilities: Vulnerability[]; fileGroups: FileGroup[] } }
   | { type: 'SET_SCA_VULNERABILITIES'; payload: { scaVulnerabilities: SCAVulnerability[]; packageGroups: PackageGroup[] } }
@@ -97,8 +101,10 @@ type VulnerabilitiesAction =
 
 const initialState: VulnerabilitiesState = {
   isLoading: false,
+  isOAuthLoading: false,
   isAuthenticated: false,
   projectNotFound: false,
+  showEnterpriseForm: false,
   vulnerabilities: [],
   scaVulnerabilities: [],
   fileGroups: [],
@@ -125,8 +131,12 @@ function vulnerabilitiesReducer(state: VulnerabilitiesState, action: Vulnerabili
   switch (action.type) {
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload };
+    case 'SET_OAUTH_LOADING':
+      return { ...state, isOAuthLoading: action.payload };
     case 'SET_AUTHENTICATION':
       return { ...state, isAuthenticated: action.payload };
+    case 'SET_SHOW_ENTERPRISE_FORM':
+      return { ...state, showEnterpriseForm: action.payload };
     case 'SET_PROJECT_NOT_FOUND':
       return { ...state, projectNotFound: action.payload };
     case 'SET_VULNERABILITIES':
@@ -171,7 +181,13 @@ const VulnerabilitiesContext = createContext<{
   state: VulnerabilitiesState;
   dispatch: React.Dispatch<VulnerabilitiesAction>;
   actions: {
-    login: () => void;
+    login: () => void; // Kept for backward compatibility, now triggers OAuth login
+    oauthLogin: () => void;
+    enterpriseLogin: () => void;
+    submitEnterpriseLogin: (scope: string) => void;
+    cancelEnterpriseLogin: () => void;
+    loginWithApiKey: () => void;
+    cancelOAuth: () => void;
     refresh: () => void;
     scanProject: () => void;
     cancelScan: () => void;
@@ -211,7 +227,27 @@ export function VulnerabilitiesProvider({ children }: { children: ReactNode }) {
   // Actions that communicate with the extension
   const actions = {
     login: () => {
-      vscode.postMessage({ type: 'login' });
+      vscode.postMessage({ type: 'oauthLogin' });
+    },
+    oauthLogin: () => {
+      vscode.postMessage({ type: 'oauthLogin' });
+    },
+    enterpriseLogin: () => {
+      // Show the enterprise form instead of directly calling the service
+      dispatch({ type: 'SET_SHOW_ENTERPRISE_FORM', payload: true });
+    },
+    submitEnterpriseLogin: (scope: string) => {
+      vscode.postMessage({ type: 'submitEnterpriseLogin', scope });
+      dispatch({ type: 'SET_SHOW_ENTERPRISE_FORM', payload: false });
+    },
+    cancelEnterpriseLogin: () => {
+      dispatch({ type: 'SET_SHOW_ENTERPRISE_FORM', payload: false });
+    },
+    loginWithApiKey: () => {
+      vscode.postMessage({ type: 'loginWithApiKey' });
+    },
+    cancelOAuth: () => {
+      vscode.postMessage({ type: 'cancelOAuth' });
     },
     refresh: () => {
       vscode.postMessage({ type: 'refresh' });
@@ -269,6 +305,9 @@ export function VulnerabilitiesProvider({ children }: { children: ReactNode }) {
       const message = event.data;
 
       switch (message.type) {
+        case 'oauthLoadingUpdate':
+          dispatch({ type: 'SET_OAUTH_LOADING', payload: message.isLoading });
+          break;
         case 'scanStateUpdate':
           dispatch({ type: 'SET_SCAN_STATE', payload: message.scanState });
           break;

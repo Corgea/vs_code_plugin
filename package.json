@@ -3,8 +3,13 @@
   "displayName": "Corgea",
   "publisher": "Corgea",
   "description": "Corgea helps you automatically fix insecure code.",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "icon": "images/logo.png",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Corgea/vs_code_plugin.git"
+  },
   "engines": {
     "vscode": "^1.50.0"
   },
@@ -22,8 +27,18 @@
     },
     "commands": [
       {
-        "command": "corgea.setApiKey",
+        "command": "corgea.oauthLogin",
         "title": "Login",
+        "category": "Corgea"
+      },
+      {
+        "command": "corgea.submitEnterpriseLogin",
+        "title": "Submit Enterprise Login",
+        "category": "Corgea"
+      },
+      {
+        "command": "corgea.loginWithApiKey",
+        "title": "Login with API Key",
         "category": "Corgea"
       },
       {
@@ -59,6 +74,11 @@
       {
         "command": "corgea.cancelScan",
         "title": "Cancel Scan",
+        "category": "Corgea"
+      },
+      {
+        "command": "corgea.cancelOAuth",
+        "title": "Cancel OAuth",
         "category": "Corgea"
       }
     ],

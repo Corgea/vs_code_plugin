@@ -14,6 +14,9 @@ export function activate(context: vscode.ExtensionContext) {
   // Registering Services
   services.forEach((service) => {
     service.activate();
+    if ((service as any).initialize) {
+      (service as any).initialize(context);
+    }
   });
 
   // Registering Providers

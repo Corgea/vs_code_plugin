@@ -49,8 +49,25 @@ export default class VulnerabilitiesWebviewProvider implements vscode.WebviewVie
       console.log('Received message from webview:', data);
       switch (data.type) {
         case "login":
-          console.log('Login button clicked from webview');
-          vscode.commands.executeCommand("corgea.setApiKey");
+        case "oauthLogin":
+          console.log('OAuth login button clicked from webview');
+          vscode.commands.executeCommand("corgea.oauthLogin");
+          break;
+        case "enterpriseLogin":
+          console.log('Enterprise login button clicked from webview');
+          // This now just shows the form in UI, no command needed
+          break;
+        case "submitEnterpriseLogin":
+          console.log('Enterprise login submitted from webview with scope:', data.scope);
+          vscode.commands.executeCommand("corgea.submitEnterpriseLogin", data.scope);
+          break;
+        case "loginWithApiKey":
+          console.log('API key login button clicked from webview');
+          vscode.commands.executeCommand("corgea.loginWithApiKey");
+          break;
+        case "cancelOAuth":
+          console.log('Cancel OAuth button clicked from webview');
+          vscode.commands.executeCommand("corgea.cancelOAuth");
           break;
         case "refresh":
           console.log('Manual refresh triggered from webview');
@@ -151,6 +168,16 @@ export default class VulnerabilitiesWebviewProvider implements vscode.WebviewVie
     }
   }
 
+  @OnEvent("oauth.loading.update")
+  static async onOAuthLoadingUpdate(isLoading: boolean): Promise<void> {
+    if (VulnerabilitiesWebviewProvider._instance && VulnerabilitiesWebviewProvider._instance._view) {
+      VulnerabilitiesWebviewProvider._instance._view.webview.postMessage({
+        type: 'oauthLoadingUpdate',
+        isLoading: isLoading
+      });
+    }
+  }
+
   @OnEvent("scan.completed")
   static async onScanCompleted(): Promise<void> {
     console.log('VulnerabilitiesWebviewProvider: Scan completed event received');
@@ -211,6 +238,8 @@ export default class VulnerabilitiesWebviewProvider implements vscode.WebviewVie
   public static getInstance(): VulnerabilitiesWebviewProvider | undefined {
     return VulnerabilitiesWebviewProvider._instance;
   }
+
+
 
   async refresh(): Promise<void> {
     console.log('VulnerabilitiesWebviewProvider: instance refresh() called');

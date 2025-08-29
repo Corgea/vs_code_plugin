@@ -563,4 +563,18 @@ export default class APIManager {
       throw error;
     }
   }
+
+  public static async exchangeOAuthCode(code: string, corgeaUrl: string): Promise<{status: string, user_token?: string}> {
+    try {
+      const response = await axios.get(`${corgeaUrl}/api/${this.apiVersion}/authorize`, {
+        params: { code },
+        timeout: 10000
+      });
+      
+      return response.data;
+    } catch (error: any) {
+      DebugManager.log(`OAuth code exchange failed: ${error.message}`);
+      throw new Error(`Failed to exchange OAuth code: ${error.response?.data?.error || error.message}`);
+    }
+  }
 }

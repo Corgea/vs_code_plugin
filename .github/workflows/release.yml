@@ -20,3 +20,19 @@ jobs:
       id: release
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Trigger Deploy Workflow
+      if: steps.release.outputs.released == 'true'
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          await github.rest.actions.createWorkflowDispatch({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            workflow_id: 'deploy.yml',
+            ref: 'main',
+            inputs: {
+              tag_name: '${{ steps.release.outputs.tag }}'
+            }
+          })

@@ -7,6 +7,7 @@ import APIManager from "../utils/apiManager";
 import EventsManager from "../utils/eventsManager";
 import { OnCommand } from "../utils/commandsManager";
 import { withErrorHandling } from "../utils/ErrorHandlingManager";
+import ConfigService from "./configService";
 
 export default class AuthService {
   @OnCommand("corgea.logout")
@@ -14,6 +15,7 @@ export default class AuthService {
     StorageManager.setValue(StorageKeys.isLoggedIn, false);
     StorageManager.setValue(StorageKeys.corgeaUrl, undefined);
     StorageManager.setSecretValue(StorageSecretKeys.corgeaApiKey, "");
+    ConfigService.clearStoredConfigs(); // Clear configs on logout
     EventsManager.emit("internal.logout");
     vscode.window.showInformationMessage(
       "You have been logged out successfully.",
@@ -64,6 +66,7 @@ export default class AuthService {
         if (isValid) {
           StorageManager.setValue(StorageKeys.isLoggedIn, true);
           StorageManager.setSecretValue(StorageSecretKeys.corgeaApiKey, apiKey);
+          await ConfigService.fetchAndStoreConfigs();
           EventsManager.emit("internal.login");
           vscode.window.showInformationMessage(
             "API Key verified successfully. View the Corgea extension to start fixing.",

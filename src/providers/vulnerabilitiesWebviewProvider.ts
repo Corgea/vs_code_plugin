@@ -8,6 +8,7 @@ import ViewsManager, { Views } from "../utils/ViewsManager";
 import Vulnerability from "../types/vulnerability";
 import SCAVulnerability from "../types/scaVulnerability";
 import scanningService, { ScanState } from "../services/scanningService";
+import ConfigService from "../services/configService";
 
 export default class VulnerabilitiesWebviewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "vulnerabilitiesWebview";
@@ -22,6 +23,7 @@ export default class VulnerabilitiesWebviewProvider implements vscode.WebviewVie
   private _autoRefreshEnabled = false;
   private _autoRefreshInterval?: NodeJS.Timeout;
   private _isInScanningMode = false;
+  private _ideScanningEnabled = true;
 
   constructor(private readonly _extensionUri: vscode.Uri) {
     VulnerabilitiesWebviewProvider._instance = this;
@@ -251,7 +253,7 @@ export default class VulnerabilitiesWebviewProvider implements vscode.WebviewVie
         return;
       }
 
-      // Fetch vulnerabilities
+      // Fetch company configs and vulnerabilities in parallel
       const [response, scaResponse] = await Promise.all([
         APIManager.getProjectVulnerabilities(potentialNames).catch((error: any) => ({
           status: error.status,
@@ -260,7 +262,15 @@ export default class VulnerabilitiesWebviewProvider implements vscode.WebviewVie
         APIManager.getProjectSCAVulnerabilities(potentialNames).catch((error: any) => ({
           status: error.status,
           data: { status: "no_project_found", issues: [] },
-        }))
+        })),
+        // Fetch and store configs on refresh
+        ConfigService.fetchAndStoreConfigs().then(() => 
+          ConfigService.isIdeScanningEnabled()
+        ).then(enabled => {
+          this._ideScanningEnabled = enabled;
+        }).catch(() => {
+          // If config fetch fails, keep current state
+        })
       ]);
 
       // Check project status
@@ -336,6 +346,7 @@ export default class VulnerabilitiesWebviewProvider implements vscode.WebviewVie
       scanState: this._scanState,
       isInScanningMode: this._isInScanningMode,
       autoRefreshEnabled: this._autoRefreshEnabled,
+      ideScanningEnabled: this._ideScanningEnabled,
     });
   }
 
@@ -377,7 +388,8 @@ export default class VulnerabilitiesWebviewProvider implements vscode.WebviewVie
       hasSCAVulnerabilities: ${data.hasSCAVulnerabilities},
       scanState: ${JSON.stringify(data.scanState)},
       isInScanningMode: ${data.isInScanningMode},
-      autoRefreshEnabled: ${data.autoRefreshEnabled}
+      autoRefreshEnabled: ${data.autoRefreshEnabled},
+      ideScanningEnabled: ${data.ideScanningEnabled}
     };
   </script>
 </body>

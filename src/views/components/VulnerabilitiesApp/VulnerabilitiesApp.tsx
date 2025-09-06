@@ -6,6 +6,7 @@ import AuthContainer from '../AuthContainer/AuthContainer';
 import NoProjectContainer from '../NoProjectContainer/NoProjectContainer';
 import TabsContainer from '../TabsContainer/TabsContainer';
 import Footer from '../Footer/Footer';
+import UncommittedFilesModal from '../UncommittedFilesModal/UncommittedFilesModal';
 import './VulnerabilitiesApp.css';
 
 const VulnerabilitiesApp: React.FC = () => {
@@ -46,6 +47,7 @@ const VulnerabilitiesApp: React.FC = () => {
       <Header />
       <TabsContainer />
       <Footer />
+      <UncommittedFilesModal />
     </div>
   );
 };

@@ -16,10 +16,16 @@ const ScanningError: React.FC<ScanningErrorProps> = ({ isCancelled = false }) =>
           <i className="fas fa-times-circle" style={{ color: '#ff9500' }}></i>
         </div>
         <div className="error-message">Scan was cancelled</div>
-        <button className="btn btn-primary mt-3" onClick={actions.scanProject}>
-          <i className="fas fa-play"></i>
-          &nbsp;Start New Scan
-        </button>
+        <div className="error-actions">
+          <button className="btn btn-primary mt-3" onClick={actions.scanProject}>
+            <i className="fas fa-play"></i>
+            &nbsp;Start New Scan
+          </button>
+          <button className="btn btn-secondary mt-3 ml-2" onClick={actions.clearScanState}>
+            <i className="fas fa-times"></i>
+            &nbsp;Clear
+          </button>
+        </div>
       </div>
     );
   }

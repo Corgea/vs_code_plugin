@@ -58,6 +58,25 @@ export default class scanningService {
     await scanningService.scanProject(false);
   }
 
+  public static async getUncommittedFiles(includeIgnored: boolean = false): Promise<any[]> {
+    try {
+      const workspacePath = WorkspaceManager.getWorkspaceFolder()?.uri?.fsPath;
+      if (!workspacePath) {
+        console.log('No workspace path found');
+        return [];
+      }
+      
+      console.log(`Getting uncommitted files from ${workspacePath}, includeIgnored: ${includeIgnored}`);
+      const GitManager = (await import("../utils/gitManager")).default;
+      const uncommittedFiles = await GitManager.getUncommittedFiles(workspacePath, includeIgnored);
+      console.log(`Found ${uncommittedFiles.length} uncommitted files`);
+      return uncommittedFiles;
+    } catch (error) {
+      console.error('Error getting uncommitted files:', error);
+      return [];
+    }
+  }
+
   /*
     Scan cammand should only scan changed files unless the projecty doesnt have any previous scan results
     Options to be (forced full scan)

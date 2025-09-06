@@ -33,6 +33,6 @@ jobs:
             workflow_id: 'deploy.yml',
             ref: 'main',
             inputs: {
-              tag_name: '${{ steps.release.outputs.tag }}'
+              tag_name: '${{ steps.release.outputs.release_tag }}'
             }
           })

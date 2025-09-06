@@ -31,8 +31,5 @@ jobs:
             owner: context.repo.owner,
             repo: context.repo.repo,
             workflow_id: 'deploy.yml',
-            ref: 'main',
-            inputs: {
-              tag_name: '${{ steps.release.outputs.release_tag }}'
-            }
+            ref: '${{ steps.release.outputs.release_tag }}'
           })

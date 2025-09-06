@@ -2,17 +2,7 @@ name: Deploy
 
 on:
   workflow_dispatch:
-    inputs:
-      tag_name:
-        description: 'Tag name for the release'
-        required: true
-        type: string
   workflow_call:
-    inputs:
-      tag_name:
-        description: 'Tag name for the release'
-        required: true
-        type: string
 
 jobs:
   deploy:

@@ -12,6 +12,7 @@ import StorageManager, {
 import ErrorHandlingManager, { withErrorHandling } from "../utils/ErrorHandlingManager";
 import EventsManager from "../utils/eventsManager";
 import WorkspaceManager from "../utils/workspaceManager";
+import ConfigService from "./configService";
 const kill = require('tree-kill');
 
 export interface ScanProgress {
@@ -54,7 +55,17 @@ export default class scanningService {
   };
 
   @OnCommand("corgea.scan-uncommitted")
+  @withErrorHandling()
   public static async scanUncommittedFiles() {
+    // Check if IDE scanning is enabled
+    const isIdeScanningEnabled = await ConfigService.isIdeScanningEnabled();
+    if (!isIdeScanningEnabled) {
+      vscode.window.showInformationMessage(
+        "IDE scanning is disabled for your organization. Please contact your administrator to enable this feature."
+      );
+      return;
+    }
+    
     await scanningService.scanProject(false);
   }
 
@@ -66,6 +77,15 @@ export default class scanningService {
   @OnCommand("corgea.scan-full")
   @withErrorHandling()
   public static async scanProject(isFullScan: boolean = true) {
+    // Check if IDE scanning is enabled
+    const isIdeScanningEnabled = await ConfigService.isIdeScanningEnabled();
+    if (!isIdeScanningEnabled) {
+      vscode.window.showInformationMessage(
+        "IDE scanning is disabled for your organization. Please contact your administrator to enable this feature."
+      );
+      return;
+    }
+    
     // Reset scan state
     scanningService._scanCancelledByUser = false;
     scanningService._scanState = {

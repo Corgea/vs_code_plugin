@@ -5,6 +5,7 @@ export enum StorageKeys {
   corgeaUrl = "corgeaUrl",
   highlightingEnabled = "highlightingEnabled",
   debugModeEnabled = "debugModeEnabled",
+  companyConfigs = "companyConfigs",
 }
 
 export enum StorageSecretKeys {

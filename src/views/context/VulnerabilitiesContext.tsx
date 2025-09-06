@@ -74,6 +74,7 @@ export interface VulnerabilitiesState {
   isInScanningMode: boolean;
   autoRefreshEnabled: boolean;
   activeTab: 'code' | 'sca' | 'scanning';
+  ideScanningEnabled: boolean;
 }
 
 type VulnerabilitiesAction =
@@ -86,8 +87,9 @@ type VulnerabilitiesAction =
   | { type: 'SET_SCANNING_MODE'; payload: boolean }
   | { type: 'SET_AUTO_REFRESH'; payload: boolean }
   | { type: 'SET_ACTIVE_TAB'; payload: 'code' | 'sca' | 'scanning' }
-  | { type: 'UPDATE_VULNERABILITY_LISTS'; payload: { 
-      vulnerabilities: Vulnerability[]; 
+  | { type: 'SET_IDE_SCANNING_ENABLED'; payload: boolean }
+  | { type: 'UPDATE_VULNERABILITY_LISTS'; payload: {
+      vulnerabilities: Vulnerability[];
       scaVulnerabilities: SCAVulnerability[];
       fileGroups: FileGroup[];
       packageGroups: PackageGroup[];
@@ -118,7 +120,8 @@ const initialState: VulnerabilitiesState = {
   },
   isInScanningMode: false,
   autoRefreshEnabled: false,
-  activeTab: 'code'
+  activeTab: 'code',
+  ideScanningEnabled: true
 };
 
 function vulnerabilitiesReducer(state: VulnerabilitiesState, action: VulnerabilitiesAction): VulnerabilitiesState {
@@ -151,6 +154,8 @@ function vulnerabilitiesReducer(state: VulnerabilitiesState, action: Vulnerabili
       return { ...state, autoRefreshEnabled: action.payload };
     case 'SET_ACTIVE_TAB':
       return { ...state, activeTab: action.payload };
+    case 'SET_IDE_SCANNING_ENABLED':
+      return { ...state, ideScanningEnabled: action.payload };
     case 'UPDATE_VULNERABILITY_LISTS':
       return {
         ...state,
@@ -263,6 +268,7 @@ export function VulnerabilitiesProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'SET_SCAN_STATE', payload: data.scanState || initialState.scanState });
       dispatch({ type: 'SET_SCANNING_MODE', payload: data.isInScanningMode });
       dispatch({ type: 'SET_AUTO_REFRESH', payload: data.autoRefreshEnabled });
+      dispatch({ type: 'SET_IDE_SCANNING_ENABLED', payload: data.ideScanningEnabled });
     }
 
     const handleMessage = (event: MessageEvent) => {

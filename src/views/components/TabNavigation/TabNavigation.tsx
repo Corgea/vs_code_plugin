@@ -10,6 +10,11 @@ const TabNavigation: React.FC = () => {
   const [showRightIndicator, setShowRightIndicator] = useState(false);
 
   const handleTabClick = (tab: 'code' | 'sca' | 'scanning') => {
+    // Don't allow switching to scanning tab if it's disabled
+    if (tab === 'scanning' && !state.ideScanningEnabled) {
+      return;
+    }
+    
     dispatch({ type: 'SET_ACTIVE_TAB', payload: tab });
     
     // Scroll to active tab if it's not fully visible
@@ -88,28 +93,30 @@ const TabNavigation: React.FC = () => {
     
     event.preventDefault();
     
-    const tabs = ['code', 'sca', 'scanning'] as const;
-    const currentIndex = tabs.indexOf(state.activeTab);
+    // Filter available tabs based on IDE scanning config
+    const allTabs = ['code', 'sca', 'scanning'] as const;
+    const availableTabs = state.ideScanningEnabled ? allTabs : (['code', 'sca'] as const);
+    const currentIndex = availableTabs.indexOf(state.activeTab as any);
     
     let newIndex = currentIndex;
     
     switch (event.key) {
       case 'ArrowLeft':
-        newIndex = currentIndex > 0 ? currentIndex - 1 : tabs.length - 1;
+        newIndex = currentIndex > 0 ? currentIndex - 1 : availableTabs.length - 1;
         break;
       case 'ArrowRight':
-        newIndex = currentIndex < tabs.length - 1 ? currentIndex + 1 : 0;
+        newIndex = currentIndex < availableTabs.length - 1 ? currentIndex + 1 : 0;
         break;
       case 'Home':
         newIndex = 0;
         break;
       case 'End':
-        newIndex = tabs.length - 1;
+        newIndex = availableTabs.length - 1;
         break;
     }
     
     if (newIndex !== currentIndex) {
-      handleTabClick(tabs[newIndex]);
+      handleTabClick(availableTabs[newIndex]);
     }
   };
 
@@ -144,6 +151,14 @@ const TabNavigation: React.FC = () => {
   useEffect(() => {
     setTimeout(() => updateScrollIndicators(), 100);
   }, [state.vulnerabilities.length, state.scaVulnerabilities.length, state.scanState.isScanning]);
+
+  // Handle tab switching when IDE scanning is disabled
+  useEffect(() => {
+    if (!state.ideScanningEnabled && state.activeTab === 'scanning') {
+      // Switch to code tab if scanning tab is disabled and currently active
+      dispatch({ type: 'SET_ACTIVE_TAB', payload: 'code' });
+    }
+  }, [state.ideScanningEnabled, state.activeTab, dispatch]);
 
   return (
     <div className="tab-navigation-container">
@@ -206,23 +221,25 @@ const TabNavigation: React.FC = () => {
                 )}
               </button>
             </li>
-            <li className="nav-item" role="presentation">
-              <button
-                className={`nav-link ${state.activeTab === 'scanning' ? 'active' : ''}`}
-                onClick={() => handleTabClick('scanning')}
-                type="button"
-                role="tab"
-                aria-selected={state.activeTab === 'scanning'}
-              >
-                <i className="fas fa-search"></i>
-                &nbsp;Scanning
-                {state.scanState.isScanning && (
-                  <span className="count-badge scanning-indicator">
-                    <i className="fas fa-spinner fa-spin"></i>
-                  </span>
-                )}
-              </button>
-            </li>
+            {state.ideScanningEnabled && (
+              <li className="nav-item" role="presentation">
+                <button
+                  className={`nav-link ${state.activeTab === 'scanning' ? 'active' : ''}`}
+                  onClick={() => handleTabClick('scanning')}
+                  type="button"
+                  role="tab"
+                  aria-selected={state.activeTab === 'scanning'}
+                >
+                  <i className="fas fa-search"></i>
+                  &nbsp;Scanning
+                  {state.scanState.isScanning && (
+                    <span className="count-badge scanning-indicator">
+                      <i className="fas fa-spinner fa-spin"></i>
+                    </span>
+                  )}
+                </button>
+              </li>
+            )}
           </ul>
         </div>
       </div>

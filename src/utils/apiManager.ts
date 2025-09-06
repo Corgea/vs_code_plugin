@@ -563,4 +563,27 @@ export default class APIManager {
       throw error;
     }
   }
+
+  public static async getCompanyConfigs(): Promise<{
+    status: string;
+    configs: {
+      ide: {
+        ide_scanning_enabled: boolean;
+      };
+    };
+  }> {
+    const corgeaUrl = await APIManager.getBaseUrl();
+    try {
+      const client = await this.getBaseClient();
+      const url = `${corgeaUrl}/api/${this.apiVersion}/configs`;
+      const response = await client.get(url);
+      this.checkForWarnings(response.headers, response.status);
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    } finally {
+      APIManager.hideLoadingStatus();
+    }
+  }
 }

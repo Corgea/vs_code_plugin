@@ -100,6 +100,41 @@ export default class VulnerabilitiesWebviewProvider implements vscode.WebviewVie
           console.log('Auto refresh toggle clicked from webview');
           await this.toggleAutoRefresh();
           break;
+        case "getUncommittedFiles":
+          console.log('Get uncommitted files requested from webview', data.includeIgnored ? 'including ignored files' : 'excluding ignored files');
+          const uncommittedFiles = await scanningService.getUncommittedFiles(data.includeIgnored || false);
+          this._view?.webview.postMessage({
+            type: 'uncommittedFilesResponse',
+            files: uncommittedFiles
+          });
+          break;
+        case "scanUncommittedFiles":
+          console.log('Scan uncommitted files button clicked from webview');
+          vscode.commands.executeCommand("corgea.scan-uncommitted");
+          break;
+        case "clearScanState":
+          console.log('Clear scan state requested from webview');
+          // Reset scan state and exit scanning mode
+          this._scanState = {
+            isScanning: false,
+            progress: [],
+            output: [],
+            stages: {
+              init: false,
+              package: false,
+              upload: false,
+              scan: false
+            }
+          };
+          this._isInScanningMode = false;
+          this._view?.webview.postMessage({
+            type: 'exitScanningMode'
+          });
+          this._view?.webview.postMessage({
+            type: 'scanStateUpdate',
+            scanState: this._scanState
+          });
+          break;
         default:
           console.log('Unknown message type:', data.type);
       }

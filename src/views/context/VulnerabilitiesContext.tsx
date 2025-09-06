@@ -33,6 +33,11 @@ export interface ScanProgress {
   percentage?: number;
 }
 
+export interface UncommittedFile {
+  path: string;
+  status: string;
+}
+
 export interface ScanState {
   isScanning: boolean;
   scanId?: string;
@@ -76,6 +81,8 @@ export interface VulnerabilitiesState {
   isInScanningMode: boolean;
   autoRefreshEnabled: boolean;
   activeTab: 'code' | 'sca' | 'scanning';
+  uncommittedFiles: UncommittedFile[];
+  showUncommittedFilesModal: boolean;
 }
 
 type VulnerabilitiesAction =
@@ -90,6 +97,8 @@ type VulnerabilitiesAction =
   | { type: 'SET_SCANNING_MODE'; payload: boolean }
   | { type: 'SET_AUTO_REFRESH'; payload: boolean }
   | { type: 'SET_ACTIVE_TAB'; payload: 'code' | 'sca' | 'scanning' }
+  | { type: 'SET_UNCOMMITTED_FILES'; payload: UncommittedFile[] }
+  | { type: 'SET_SHOW_UNCOMMITTED_FILES_MODAL'; payload: boolean }
   | { type: 'UPDATE_VULNERABILITY_LISTS'; payload: { 
       vulnerabilities: Vulnerability[]; 
       scaVulnerabilities: SCAVulnerability[];
@@ -124,7 +133,9 @@ const initialState: VulnerabilitiesState = {
   },
   isInScanningMode: false,
   autoRefreshEnabled: false,
-  activeTab: 'code'
+  activeTab: 'code',
+  uncommittedFiles: [],
+  showUncommittedFilesModal: false
 };
 
 function vulnerabilitiesReducer(state: VulnerabilitiesState, action: VulnerabilitiesAction): VulnerabilitiesState {
@@ -161,6 +172,10 @@ function vulnerabilitiesReducer(state: VulnerabilitiesState, action: Vulnerabili
       return { ...state, autoRefreshEnabled: action.payload };
     case 'SET_ACTIVE_TAB':
       return { ...state, activeTab: action.payload };
+    case 'SET_UNCOMMITTED_FILES':
+      return { ...state, uncommittedFiles: action.payload };
+    case 'SET_SHOW_UNCOMMITTED_FILES_MODAL':
+      return { ...state, showUncommittedFilesModal: action.payload };
     case 'UPDATE_VULNERABILITY_LISTS':
       return {
         ...state,
@@ -195,6 +210,11 @@ const VulnerabilitiesContext = createContext<{
     toggleAutoRefresh: () => void;
     showVulnerabilityDetails: (vulnerability: Vulnerability) => void;
     showSCAVulnerabilityDetails: (vulnerability: SCAVulnerability) => void;
+    getUncommittedFiles: (includeIgnored?: boolean) => void;
+    scanUncommittedFiles: () => void;
+    showUncommittedFilesModal: () => void;
+    hideUncommittedFilesModal: () => void;
+    clearScanState: () => void;
   };
 } | undefined>(undefined);
 
@@ -277,6 +297,21 @@ export function VulnerabilitiesProvider({ children }: { children: ReactNode }) {
         allIssues: state.scaVulnerabilities,
         project: {}
       });
+    },
+    getUncommittedFiles: (includeIgnored: boolean = false) => {
+      vscode.postMessage({ type: 'getUncommittedFiles', includeIgnored });
+    },
+    scanUncommittedFiles: () => {
+      vscode.postMessage({ type: 'scanUncommittedFiles' });
+    },
+    showUncommittedFilesModal: () => {
+      dispatch({ type: 'SET_SHOW_UNCOMMITTED_FILES_MODAL', payload: true });
+    },
+    hideUncommittedFilesModal: () => {
+      dispatch({ type: 'SET_SHOW_UNCOMMITTED_FILES_MODAL', payload: false });
+    },
+    clearScanState: () => {
+      vscode.postMessage({ type: 'clearScanState' });
     }
   };
 
@@ -325,6 +360,9 @@ export function VulnerabilitiesProvider({ children }: { children: ReactNode }) {
           break;
         case 'updateVulnerabilityLists':
           dispatch({ type: 'UPDATE_VULNERABILITY_LISTS', payload: message });
+          break;
+        case 'uncommittedFilesResponse':
+          dispatch({ type: 'SET_UNCOMMITTED_FILES', payload: message.files });
           break;
       }
     };

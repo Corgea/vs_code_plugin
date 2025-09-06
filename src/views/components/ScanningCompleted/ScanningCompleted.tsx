@@ -18,9 +18,13 @@ const ScanningCompleted: React.FC = () => {
             &nbsp;View Results in Corgea
           </button>
         )}
-        <button className="btn btn-secondary" onClick={actions.scanProject}>
+        <button className="btn btn-secondary me-2" onClick={actions.scanProject}>
           <i className="fas fa-redo"></i>
           &nbsp;Scan Again
+        </button>
+        <button className="btn btn-secondary" onClick={actions.clearScanState}>
+          <i className="fas fa-times"></i>
+          &nbsp;Clear
         </button>
       </div>
     </div>

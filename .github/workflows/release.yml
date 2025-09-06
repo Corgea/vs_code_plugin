@@ -48,8 +48,18 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Check if VSCE_PAT exists
+      id: check_secret
+      if: steps.release.outputs.released == 'true'
+      run: |
+        if [ -n "${{ secrets.VSCE_PAT }}" ]; then
+          echo "has_secret=true" >> $GITHUB_OUTPUT
+        else
+          echo "has_secret=false" >> $GITHUB_OUTPUT
+        fi
+
     - name: Publish
-      if: success() && steps.release.outputs.released == 'true' && secrets.VSCE_PAT != ''
+      if: success() && steps.release.outputs.released == 'true' && steps.check_secret.outputs.has_secret == 'true'
       run: npm run deploy
       env:
         VSCE_PAT: ${{ secrets.VSCE_PAT }}
